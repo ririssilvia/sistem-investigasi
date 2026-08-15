@@ -15,6 +15,10 @@ function doGet(e) {
       .addMetaTag('viewport', 'width=device-width, initial-scale=1');
   }
 
+  // google.script.run is a separate server execution from doGet().
+  // Store the token here so RPC calls can recover the same validated session.
+  registerSessionBridge_(session.Token);
+
   let template;
   try {
     template = HtmlService.createTemplateFromFile('Views/' + page);
