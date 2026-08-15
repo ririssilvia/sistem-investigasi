@@ -152,14 +152,44 @@ function populateFilters(options){
 }
 
 function groupRows(rows){
-  const map=new Map();
-  rows.forEach(row=>{
-    const id=String(val(row,IDX.id,'')), key=id||JSON.stringify(row);
-    if(!map.has(key)){
-      map.set(key,{ row: row });
+  const map = new Map();
+
+  rows.forEach(row => {
+    const id = String(val(row, IDX.id, '')).trim();
+    const key = id || JSON.stringify(row);
+
+    if (!map.has(key)) {
+      // Buat entitas group baru
+      map.set(key, { 
+        baseRow: [...row], 
+        companies: new Set(), 
+        employees: new Set() 
+      });
     }
+
+    const item = map.get(key);
+    
+    // Kumpulkan seluruh perusahaan & karyawan unik dari baris yang No Insiden-nya sama
+    const compVal = val(row, IDX.company, '');
+    const empVal = val(row, IDX.employee, '');
+
+    if (compVal && compVal !== '-') item.companies.add(compVal);
+    if (empVal && empVal !== '-') item.employees.add(empVal);
   });
-  return Array.from(map.values());
+
+  // Konversi balik ke format array baris tunggal
+  return Array.from(map.values()).map(item => {
+    const mergedRow = [...item.baseRow];
+    
+    if (IDX.company >= 0) {
+      mergedRow[IDX.company] = Array.from(item.companies).join(', ') || '-';
+    }
+    if (IDX.employee >= 0) {
+      mergedRow[IDX.employee] = Array.from(item.employees).join(', ') || '-';
+    }
+
+    return { row: mergedRow };
+  });
 }
 
 function renderCurrentPage(){
