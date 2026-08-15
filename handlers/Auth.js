@@ -208,7 +208,12 @@ function getFilteredIncidents(token, filters) {
     const result = getFilteredIncidentRows_(token, filters || {});
     return {
       success: true,
-      session: result.session,
+      session: {
+        Username: String(result.session.Username || ''),
+        Role: String(result.session.Role || ''),
+        Site: String(result.session.Site || ''),
+        Nama: String(result.session.Nama || '')
+      },
       headers: result.headers,
       rows: result.rows.map(row => row.map(serializeCellForClient_)),
       indices: result.indices,
