@@ -131,6 +131,33 @@ function serializeCellForClient_(value) {
   return String(value);
 }
 
+/**
+ * Membuat mapping ID_Perusahaan -> nama Perusahaan dari DB_Master_System.
+ * Data transaksi lama boleh berisi ID/kode, tetapi yang ditampilkan di laporan
+ * harus tetap nama perusahaan seperti master.
+ */
+function getCompanyMap_() {
+  const map = {};
+  const sheet = getMasterSS().getSheetByName(CONFIG.TAB_PERUSAHAAN);
+  if (!sheet) return map;
+
+  const values = sheet.getDataRange().getValues();
+  if (!values || values.length <= 1) return map;
+
+  const headers = values[0].map(v => String(v || ''));
+  const idIdx = findHeaderIndex_(headers, ['ID_Perusahaan', 'ID Perusahaan', 'Kode Perusahaan', 'Company ID']);
+  const nameIdx = findHeaderIndex_(headers, ['Perusahaan', 'Nama Perusahaan', 'Company', 'Company Name']);
+  if (idIdx === -1 || nameIdx === -1) return map;
+
+  values.slice(1).forEach(row => {
+    const id = String(row[idIdx] == null ? '' : row[idIdx]).trim();
+    const name = String(row[nameIdx] == null ? '' : row[nameIdx]).trim();
+    if (id && name) map[id.toLowerCase()] = name;
+  });
+
+  return map;
+}
+
 function getIncidentSheetData_() {
   const sheet = getTransaksiSS().getSheetByName(CONFIG.TAB_INSIDEN);
   if (!sheet) throw new Error('Tab Data_Input tidak ditemukan di DB Transaksi.');
@@ -150,11 +177,12 @@ function getFilteredIncidentRows_(token, filters) {
   const dateIdx = findHeaderIndex_(headers, ['Tanggal Kejadian', 'Tanggal', 'Date of Incident', 'Incident Date']);
   const statusIdx = findHeaderIndex_(headers, ['Status Laporan', 'Status', 'Status Incident', 'Status Insiden']);
   const idIdx = findHeaderIndex_(headers, ['Nomor Insiden', 'No Insiden', 'No. Insiden', 'ID Insiden', 'Incident Number']);
-  const companyIdx = findHeaderIndex_(headers, ['Perusahaan', 'Nama Perusahaan', 'Company']);
+  const companyIdx = findHeaderIndex_(headers, ['Perusahaan', 'Nama Perusahaan', 'ID_Perusahaan', 'ID Perusahaan', 'Company']);
   const chronologyIdx = findHeaderIndex_(headers, ['Kronologis', 'Uraian Kronologis Kejadian', 'Kronologi']);
   const role = String(session.Role || '').trim().toLowerCase();
   const isAdmin = role === 'admin';
   const sessionSite = String(session.Site || '').trim().toLowerCase();
+  const companyMap = getCompanyMap_();
 
   const sites = [];
   const statuses = [];
@@ -187,16 +215,29 @@ function getFilteredIncidentRows_(token, filters) {
     }
 
     if (search) {
-      const haystack = [idIdx, companyIdx, chronologyIdx, siteIdx, statusIdx].filter(i => i !== -1).map(i => String(row[i] || '').toLowerCase()).join(' ');
+      const companyRaw = companyIdx !== -1 ? String(row[companyIdx] || '') : '';
+      const companyName = companyMap[companyRaw.trim().toLowerCase()] || companyRaw;
+      const haystack = [idIdx, chronologyIdx, siteIdx, statusIdx].filter(i => i !== -1).map(i => String(row[i] || '').toLowerCase()).join(' ') + ' ' + companyName.toLowerCase();
       if (!haystack.includes(search)) return false;
     }
     return true;
   });
 
+  // Jangan mengubah struktur DB_Transaksi. Hanya nilai perusahaan pada response
+  // yang dikirim ke halaman laporan/export yang di-resolve menjadi nama master.
+  const displayRows = filteredRows.map(row => {
+    const copy = row.slice();
+    if (companyIdx !== -1) {
+      const raw = String(copy[companyIdx] == null ? '' : copy[companyIdx]).trim();
+      if (raw && companyMap[raw.toLowerCase()]) copy[companyIdx] = companyMap[raw.toLowerCase()];
+    }
+    return copy;
+  });
+
   return {
     session: session,
     headers: headers,
-    rows: filteredRows,
+    rows: displayRows,
     indices: { id: idIdx, date: dateIdx, site: siteIdx, company: companyIdx, status: statusIdx },
     filterOptions: { sites: isAdmin ? sites : (session.Site ? [String(session.Site)] : []), statuses: statuses },
     isAdmin: isAdmin
