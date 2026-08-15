@@ -1,34 +1,53 @@
 /**
  * HANDLER MASTER DATA DROPDOWN FORM
+ * Dropdown menampilkan ISI/NAMA master, bukan ID.
  * File: handlers/Masterdata.js
  */
 function getFormMasterData(token) {
   try {
     requireSession(token);
-
     const ss = getMasterSS();
 
-    function getColumnData(tabKey, colHeaderName) {
-      const sheetName = CONFIG[tabKey];
-      if (!sheetName) {
-        throw new Error('CONFIG master tidak ditemukan untuk key: ' + tabKey);
+    function findDisplayColumn(headers) {
+      const normalized = headers.map(h => String(h || '').trim().toLowerCase());
+
+      // Prioritas nama/isi yang umum dipakai pada tabel master.
+      const preferred = [
+        'nama', 'name', 'nama site', 'site', 'nama perusahaan', 'perusahaan',
+        'nama departemen', 'departemen', 'nama lokasi', 'lokasi',
+        'nama jabatan', 'jabatan', 'keterangan', 'deskripsi', 'description',
+        'uraian', 'value', 'nilai', 'label', 'jam', 'shift'
+      ];
+
+      for (const p of preferred) {
+        const idx = normalized.indexOf(p);
+        if (idx !== -1) return idx;
       }
 
+      // Jika kolom pertama adalah ID/Kode, ambil kolom kedua sebagai isi.
+      const first = normalized[0] || '';
+      const firstIsId = /^(id|kode|code|no|nomor|key|uuid)$/i.test(first) ||
+                        first.includes('id_') || first.endsWith('_id') ||
+                        first.includes('kode');
+      if (firstIsId && headers.length > 1) return 1;
+
+      // Fallback: kolom pertama tetap dipakai jika memang tidak ada ID.
+      return 0;
+    }
+
+    function getColumnData(tabKey) {
+      const sheetName = CONFIG[tabKey];
+      if (!sheetName) throw new Error('CONFIG master tidak ditemukan untuk key: ' + tabKey);
+
       const sheet = ss.getSheetByName(sheetName);
-      if (!sheet) {
-        throw new Error('Tab master tidak ditemukan: ' + sheetName);
-      }
+      if (!sheet) throw new Error('Tab master tidak ditemukan: ' + sheetName);
 
       const values = sheet.getDataRange().getValues();
       if (!values || values.length <= 1) return [];
 
-      let colIndex = 0;
-      if (colHeaderName) {
-        const idx = values[0].map(String).indexOf(String(colHeaderName));
-        if (idx !== -1) colIndex = idx;
-      }
+      const headers = values[0];
+      const colIndex = findDisplayColumn(headers);
 
-      // Normalisasi ke string agar aman dikirim dari Apps Script ke browser.
       return Array.from(new Set(
         values.slice(1)
           .map(row => row[colIndex])
@@ -64,15 +83,9 @@ function getFormMasterData(token) {
       ketKurangKendali: getColumnData('TAB_KET_KURANG_KENDALI')
     };
 
-    return {
-      success: true,
-      master: masterData
-    };
+    return { success: true, master: masterData };
   } catch (err) {
     Logger.log('Error getFormMasterData: ' + err.stack);
-    return {
-      success: false,
-      message: 'Gagal memuat Master Data: ' + err.message
-    };
+    return { success: false, message: 'Gagal memuat Master Data: ' + err.message };
   }
 }
