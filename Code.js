@@ -1,16 +1,15 @@
 function doGet(e) {
-  const token = e && e.parameter && e.parameter.token;
-  let page = (e && e.parameter && e.parameter.page) || 'Dashboard'; 
-  const id = e && e.parameter && e.parameter.id;
+  const params = (e && e.parameter) ? e.parameter : {};
+  const token = normalizeSessionToken_(params.token);
+  let page = params.page || 'Dashboard';
+  const id = params.id || '';
 
-  // Hapus prefix folder jika terikut dari parameter
-  page = page.replace(/^Views\//, '');
-
+  page = String(page).replace(/^Views\//, '');
   const session = token ? getValidSession(token) : null;
 
   if (!session) {
     const template = HtmlService.createTemplateFromFile('Views/Login');
-    template.scriptUrl = ScriptApp.getService().getUrl(); 
+    template.scriptUrl = ScriptApp.getService().getUrl();
     return template.evaluate()
       .setTitle('Investigasi Pertambangan Batubara — Login')
       .addMetaTag('viewport', 'width=device-width, initial-scale=1');
@@ -27,10 +26,10 @@ function doGet(e) {
   template.userName = session.Nama || session.Username;
   template.userRole = session.Role;
   template.userSite = session.Site;
-  template.token = token;
-  template.idInsiden = id || '';
+  template.token = session.Token || token;
+  template.idInsiden = id;
   template.page = page;
-  template.scriptUrl = ScriptApp.getService().getUrl(); 
+  template.scriptUrl = ScriptApp.getService().getUrl();
 
   return template.evaluate()
     .setTitle(`HSE Portal — ${page}`)
@@ -39,7 +38,6 @@ function doGet(e) {
 
 function include(filename, context) {
   let cleanPath = filename.startsWith('Views/') ? filename : 'Views/' + filename;
-  
   let template;
   try {
     template = HtmlService.createTemplateFromFile(cleanPath);
@@ -52,6 +50,5 @@ function include(filename, context) {
       template[key] = context[key];
     });
   }
-  
   return template.evaluate().getContent();
 }
