@@ -16,8 +16,9 @@ function uploadAttachment(token, idInsiden, fileObject, jenisLampiran) {
     if (idIdx < 0 || statusIdx < 0) throw new Error('Kolom No Insiden/Status tidak ditemukan.');
     const matches = values.slice(1).filter(r => String(r[idIdx] || '').trim() === String(idInsiden).trim());
     if (!matches.length) throw new Error('Data insiden tidak ditemukan.');
-    if (!incidentIsAdmin_(session) && siteIdx >= 0 && String(matches[0][siteIdx] || '').trim().toLowerCase() !== String(session.Site || '').trim().toLowerCase()) throw new Error('Anda tidak memiliki akses ke laporan ini.');
-    if (String(matches[0][statusIdx] || '').trim().toLowerCase() === 'close') throw new Error('Laporan yang sudah Close tidak dapat menerima lampiran baru.');
+    const isAdmin = incidentIsAdmin_(session);
+    if (!isAdmin && siteIdx >= 0 && String(matches[0][siteIdx] || '').trim().toLowerCase() !== String(session.Site || '').trim().toLowerCase()) throw new Error('Anda tidak memiliki akses ke laporan ini.');
+    if (String(matches[0][statusIdx] || '').trim().toLowerCase() === 'close' && !isAdmin) throw new Error('Laporan yang sudah Close tidak dapat menerima lampiran baru.');
 
     const parentFolder = DriveApp.getFolderById(CONFIG.LAMPIRAN_FOLDER_ID);
     let targetFolder;
