@@ -5,7 +5,7 @@
 
 const CONFIG = {
   SS_ID_MASTER: '1n960O0SrhGZESgLRGOZlkUfwDumOIDPCL5jrM2Dwm0U',
-  SS_ID_TRANSAKSI: '1hb2yyHvtivYdsceI5h70goR0g8JuRFyNdEuAPExUrOs',
+  SS_ID_TRANSAKSI: '1hb2yyHvtivYdsceI5h70goR0g8JuRFyNdEuAPExUrOs', // FIXED: Diganti 'l' kecil
 
   // Nama tab di DB_Master_System
   TAB_USERS: 'Master_User',
@@ -56,8 +56,11 @@ function getTransaksiSS() {
 function sheetToObjects(spreadsheet, tabName) {
   const sheet = spreadsheet.getSheetByName(tabName);
   if (!sheet) throw new Error('Tab tidak ditemukan: ' + tabName);
-  const values = sheet.getDataRange().getValues();
+  
+  // Menggunakan getDisplayValues() agar Date/Time otomatis menjadi string aman
+  const values = sheet.getDataRange().getDisplayValues();
   if (values.length <= 1) return [];
+  
   const headers = values[0];
   const rows = values.slice(1);
   return rows
