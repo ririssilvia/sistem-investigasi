@@ -5,6 +5,7 @@
 const SESSION_TAB = 'Sessions';
 const SESSION_DURATION_NORMAL_MS = 8 * 60 * 60 * 1000;
 const SESSION_DURATION_REMEMBER_MS = 30 * 24 * 60 * 60 * 1000;
+const SESSION_BRIDGE_TTL_SECONDS = 8 * 60 * 60;
 
 function attemptLogin(username, password, rememberMe) {
   const users = sheetToObjects(getMasterSS(), CONFIG.TAB_USERS);
@@ -25,11 +26,45 @@ function createSession(user, rememberMe) {
     sheet.appendRow(['Token', 'Username', 'Role', 'Site', 'Nama', 'ExpiresAt']);
   }
   sheet.appendRow([token, user.Username, user.Role, user.Site, user.Nama, expiresAt]);
+  registerSessionBridge_(token);
   return token;
 }
 
 function normalizeSessionToken_(token) {
   return String(token == null ? '' : token).replace(/[\u200B-\u200D\uFEFF]/g, '').trim();
+}
+
+function getSessionBridgeKey_() {
+  return 'HSE_SESSION_' + Session.getTemporaryActiveUserKey();
+}
+
+function registerSessionBridge_(token) {
+  const normalizedToken = normalizeSessionToken_(token);
+  if (!normalizedToken) return;
+  try {
+    CacheService.getScriptCache().put(getSessionBridgeKey_(), normalizedToken, SESSION_BRIDGE_TTL_SECONDS);
+  } catch (e) {
+    // Cache is only a fallback; normal token authentication remains authoritative.
+  }
+}
+
+function getBridgedSessionToken_() {
+  try {
+    return normalizeSessionToken_(CacheService.getScriptCache().get(getSessionBridgeKey_()));
+  } catch (e) {
+    return '';
+  }
+}
+
+function resolveSessionToken_(token) {
+  const supplied = normalizeSessionToken_(token);
+  if (supplied && getValidSession(supplied)) {
+    registerSessionBridge_(supplied);
+    return supplied;
+  }
+  const bridged = getBridgedSessionToken_();
+  if (bridged && getValidSession(bridged)) return bridged;
+  return supplied || bridged || '';
 }
 
 function getValidSession(token) {
@@ -43,7 +78,6 @@ function getValidSession(token) {
     const expiresAt = session.ExpiresAt instanceof Date ? session.ExpiresAt : new Date(session.ExpiresAt);
     if (isNaN(expiresAt.getTime()) || expiresAt.getTime() <= Date.now()) return null;
 
-    // Selalu kembalikan token yang bersih agar request berikutnya konsisten.
     session.Token = normalizedToken;
     return session;
   } catch (e) {
@@ -59,13 +93,15 @@ function logoutSession(token) {
   for (let i = 1; i < values.length; i++) {
     if (normalizeSessionToken_(values[i][0]) === normalizedToken) { sheet.deleteRow(i + 1); break; }
   }
+  try { CacheService.getScriptCache().remove(getSessionBridgeKey_()); } catch (e) {}
   return { success: true };
 }
 
 function requireSession(token) {
-  const normalizedToken = normalizeSessionToken_(token);
-  const session = getValidSession(normalizedToken);
+  const resolvedToken = resolveSessionToken_(token);
+  const session = getValidSession(resolvedToken);
   if (!session) throw new Error('Sesi telah berakhir atau tidak valid. Silakan login kembali.');
+  registerSessionBridge_(session.Token);
   return session;
 }
 
@@ -169,7 +205,7 @@ function getFilteredIncidentRows_(token, filters) {
 
 function getFilteredIncidents(token, filters) {
   try {
-    const result = getFilteredIncidentRows_(normalizeSessionToken_(token), filters || {});
+    const result = getFilteredIncidentRows_(token, filters || {});
     return {
       success: true,
       session: result.session,
@@ -186,7 +222,7 @@ function getFilteredIncidents(token, filters) {
 }
 
 function exportIncidentExcel(token, filters) {
-  const result = getFilteredIncidentRows_(normalizeSessionToken_(token), filters || {});
+  const result = getFilteredIncidentRows_(token, filters || {});
   if (!result.rows.length) return { success: false, message: 'Tidak ada data yang sesuai dengan filter untuk diexport.' };
 
   const tempName = 'EXPORT_INCIDENT_' + Utilities.formatDate(new Date(), Session.getScriptTimeZone(), 'yyyyMMdd_HHmmss');
