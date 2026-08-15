@@ -4,7 +4,7 @@
   #appSidebar{width:260px!important;min-width:260px!important;position:fixed!important;top:0;bottom:0;left:0;background:linear-gradient(180deg,var(--red-sinarmas) 0%,var(--red-dark-sidebar) 100%)!important;color:#fff!important;padding:20px 12px!important;z-index:1050!important;transition:width .3s ease,min-width .3s ease,transform .3s ease!important;box-shadow:4px 0 15px rgba(0,0,0,.15)!important;overflow-x:hidden!important;display:flex!important;flex-direction:column!important}
   #appSidebar.mini-sidebar{width:70px!important;min-width:70px!important}#appSidebar.mini-sidebar .hide-on-mini{display:none!important}#appSidebar.mini-sidebar .brand-box{justify-content:center!important;padding-bottom:12px!important}#appSidebar.mini-sidebar .nav-btn{justify-content:center!important;padding:12px 0!important}#appSidebar.mini-sidebar .nav-btn i{font-size:22px!important;margin:0!important}
   .brand-box{padding-bottom:16px;border-bottom:1px solid rgba(255,255,255,.2);margin-bottom:20px}.brand-title{font-size:18px;font-weight:800;color:#fff;white-space:nowrap}.nav-btn{display:flex;align-items:center;gap:14px;width:100%;padding:12px 16px;color:rgba(255,255,255,.85)!important;background:transparent;border:none;text-decoration:none!important;border-radius:8px;margin-bottom:6px;font-weight:600;font-size:14px;transition:background .2s ease;white-space:nowrap}.nav-btn:hover{background:rgba(255,255,255,.15);color:#fff!important}.nav-btn.active{background:#fff!important;color:var(--red-sinarmas)!important;font-weight:700;box-shadow:0 4px 10px rgba(0,0,0,.15)}.nav-btn.active i{color:var(--red-sinarmas)!important}@media(max-width:991px){#appSidebar{transform:translateX(-100%)}#appSidebar.show-mobile{transform:translateX(0);width:260px!important}}
-  .incident-action-wrap{display:flex;justify-content:center;gap:5px;flex-wrap:wrap}.incident-action-wrap .btn{font-size:12px;border-radius:7px;white-space:nowrap}.incident-modal-backdrop{position:fixed;inset:0;background:rgba(15,23,42,.62);display:none;align-items:center;justify-content:center;padding:20px;z-index:20000}.incident-modal-backdrop.show{display:flex}.incident-modal{width:min(560px,100%);background:#fff;border-radius:16px;box-shadow:0 25px 70px rgba(0,0,0,.25);padding:24px}.incident-modal h5{font-weight:800;margin:0}.incident-modal .meta{background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:12px;font-size:13px}.incident-modal textarea{min-height:100px;resize:vertical}
+  .incident-action-wrap{display:flex;justify-content:center;align-items:center;gap:5px;flex-wrap:wrap;min-width:260px}.incident-action-wrap .btn{font-size:12px;border-radius:7px;white-space:nowrap}.incident-action-wrap .btn i{margin-right:3px}.incident-modal-backdrop{position:fixed;inset:0;background:rgba(15,23,42,.62);display:none;align-items:center;justify-content:center;padding:20px;z-index:20000}.incident-modal-backdrop.show{display:flex}.incident-modal{width:min(560px,100%);background:#fff;border-radius:16px;box-shadow:0 25px 70px rgba(0,0,0,.25);padding:24px}.incident-modal h5{font-weight:800;margin:0}.incident-modal .meta{background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:12px;font-size:13px}.incident-modal textarea{min-height:100px;resize:vertical}
 </style>
 <? var _url=(typeof scriptUrl!=='undefined')?scriptUrl:'';var _token=(typeof token!=='undefined')?token:'';var _page=(typeof page!=='undefined')?page:'';var _role=(typeof userRole!=='undefined')?userRole:'';var _name=(typeof userName!=='undefined')?userName:'User';var _site=(typeof userSite!=='undefined')?userSite:'-'; ?>
 <aside id="appSidebar">
@@ -17,23 +17,137 @@ function toggleSidebar(){const sidebar=document.getElementById('appSidebar'),mai
 function logout(){google.script.run.withSuccessHandler(()=>{window.top.location.href="<?= _url ?>";}).logoutSession("<?= _token ?>")}
 
 (function(){
-  const LIST_PAGE=<?= JSON.stringify(_page) ?>, LIST_TOKEN=<?= JSON.stringify(_token) ?>, LIST_URL=<?= JSON.stringify(_url) ?>, LIST_ROLE=<?= JSON.stringify(_role) ?>;
-  if(LIST_PAGE!=='IncidentList')return;
-  const isAdmin=String(LIST_ROLE||'').toLowerCase()==='admin';
+  const LIST_PAGE=<?= JSON.stringify(_page) ?>;
+  const LIST_TOKEN=<?= JSON.stringify(_token) ?>;
+  const LIST_URL=<?= JSON.stringify(_url) ?>;
+  const LIST_ROLE=<?= JSON.stringify(_role) ?>;
+  if(LIST_PAGE!=='IncidentList') return;
+
+  const isAdmin=String(LIST_ROLE||'').trim().toLowerCase()==='admin';
   const esc=v=>String(v??'').replace(/[&<>'"]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[m]));
-  function getIncidentId(row){const edit=row.querySelector('a[href*="page=IncidentEdit"]');if(!edit)return'';try{return new URL(edit.href,location.href).searchParams.get('id')||''}catch(e){const m=edit.href.match(/[?&]id=([^&]+)/);return m?decodeURIComponent(m[1]):''}}
+
   function detailUrl(id){return LIST_URL+'?token='+encodeURIComponent(LIST_TOKEN)+'&page=IncidentDetail&id='+encodeURIComponent(id)}
   function editUrl(id){return LIST_URL+'?token='+encodeURIComponent(LIST_TOKEN)+'&page=IncidentEdit&id='+encodeURIComponent(id)}
-  function replaceActions(){const tbody=document.getElementById('listTableBody');if(!tbody)return;tbody.querySelectorAll('tr').forEach(row=>{const cells=row.children;if(cells.length<8)return;const action=cells[7];if(action.dataset.actionsReady==='1')return;const id=getIncidentId(row);if(!id)return;const status=String(cells[6].innerText||'').trim().toLowerCase();const close=status==='close';const wrap=document.createElement('div');wrap.className='incident-action-wrap';wrap.innerHTML='<a class="btn btn-sm btn-outline-primary" href="'+detailUrl(id)+'" title="Detail"><i class="bi bi-eye me-1"></i>Detail</a><a class="btn btn-sm btn-outline-warning" href="'+editUrl(id)+'" title="Edit"><i class="bi bi-pencil me-1"></i>Edit</a>';
-      if(!close||isAdmin){wrap.insertAdjacentHTML('beforeend','<button type="button" class="btn btn-sm btn-outline-success" data-action="update"><i class="bi bi-check2-circle me-1"></i>Update</button><button type="button" class="btn btn-sm btn-outline-danger" data-action="delete"><i class="bi bi-trash me-1"></i>Delete</button>')}
-      if(close&&!isAdmin)wrap.querySelector('a.btn-outline-warning').remove();
-      const update=wrap.querySelector('[data-action="update"]'),del=wrap.querySelector('[data-action="delete"]');if(update)update.onclick=()=>openCloseModal(id);if(del)del.onclick=()=>deleteIncidentFromList(id);action.innerHTML='';action.appendChild(wrap);action.dataset.actionsReady='1';});}
-  function observe(){const tbody=document.getElementById('listTableBody');if(!tbody){setTimeout(observe,100);return}new MutationObserver(()=>replaceActions()).observe(tbody,{childList:true,subtree:true});replaceActions()}
-  function modal(){let b=document.getElementById('incidentCloseModal');if(b)return b;b=document.createElement('div');b.id='incidentCloseModal';b.className='incident-modal-backdrop';b.innerHTML='<div class="incident-modal"><div class="d-flex justify-content-between align-items-center mb-3"><h5>Update Laporan</h5><button type="button" class="btn-close" data-close></button></div><div class="meta mb-3"><div><span class="text-muted">No. Insiden</span><br><strong id="closeIncidentId"></strong></div><div class="mt-2"><span class="text-muted">Status Setelah Update</span><br><span class="badge bg-success">CLOSE</span></div></div><label class="form-label fw-bold">Lampiran Penyelesaian <span class="text-muted fw-normal">(opsional)</span></label><input type="file" id="closeFile" class="form-control mb-3"><label class="form-label fw-bold">Catatan Penyelesaian</label><textarea id="closeNote" class="form-control mb-3" placeholder="Masukkan catatan penyelesaian..."></textarea><div class="d-flex justify-content-end gap-2"><button type="button" class="btn btn-outline-secondary" data-close>Batal</button><button type="button" class="btn btn-danger" id="closeSubmit"><i class="bi bi-check2-circle me-1"></i>Update & Close</button></div></div>';document.body.appendChild(b);b.querySelectorAll('[data-close]').forEach(x=>x.onclick=()=>b.classList.remove('show'));return b}
-  function openCloseModal(id){const b=modal();b.dataset.incidentId=id;b.querySelector('#closeIncidentId').textContent=id;b.querySelector('#closeFile').value='';b.querySelector('#closeNote').value='';b.classList.add('show');b.querySelector('#closeSubmit').onclick=()=>submitClose(b)}
-  function setSubmitBusy(btn,busy){btn.disabled=busy;btn.innerHTML=busy?'<span class="spinner-border spinner-border-sm me-1"></span>Memproses...':'<i class="bi bi-check2-circle me-1"></i>Update & Close'}
-  function submitClose(b){const id=b.dataset.incidentId,file=b.querySelector('#closeFile').files[0],note=b.querySelector('#closeNote').value.trim(),btn=b.querySelector('#closeSubmit');setSubmitBusy(btn,true);const finish=()=>{google.script.run.withSuccessHandler(r=>{if(typeof r==='string')try{r=JSON.parse(r)}catch(e){}if(!r||!r.success){setSubmitBusy(btn,false);alert(r?.message||'Laporan gagal ditutup.');return}b.classList.remove('show');window.location.reload()}).withFailureHandler(()=>{setSubmitBusy(btn,false);alert('Laporan gagal ditutup. Silakan coba lagi.')}).updateIncidentStatus(LIST_TOKEN,id,'Close',note)};if(!file){finish();return}const reader=new FileReader();reader.onload=()=>{try{const dataUrl=String(reader.result||''),base64=dataUrl.split(',')[1]||'';google.script.run.withSuccessHandler(r=>{if(typeof r==='string')try{r=JSON.parse(r)}catch(e){}if(!r||!r.success){setSubmitBusy(btn,false);alert(r?.message||'Lampiran gagal diupload. Silakan coba lagi.');return}finish()}).withFailureHandler(()=>{setSubmitBusy(btn,false);alert('Lampiran gagal diupload. Silakan coba lagi.')}).uploadAttachment(LIST_TOKEN,id,{bytes:base64,mimeType:file.type,fileName:file.name},'Penyelesaian');}catch(e){setSubmitBusy(btn,false);alert('Lampiran gagal diproses. Silakan coba lagi.')}};reader.readAsDataURL(file)}
-  function deleteIncidentFromList(id){if(!confirm('Hapus laporan '+id+'?\n\nData yang sudah dihapus tidak dapat dikembalikan.'))return;google.script.run.withSuccessHandler(r=>{if(!r||!r.success){alert(r?.message||'Laporan gagal dihapus.');return}window.location.reload()}).withFailureHandler(()=>alert('Laporan gagal dihapus. Silakan coba lagi.')).deleteIncident(LIST_TOKEN,id)}
-  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',observe);else observe();
+
+  function getIncidentId(row){
+    const cell=row.children[0];
+    return cell ? String(cell.textContent||'').replace(/\s+/g,' ').trim() : '';
+  }
+
+  function normalizeStatus(row){
+    const cell=row.children[6];
+    return cell ? String(cell.textContent||'').trim().toLowerCase() : '';
+  }
+
+  function replaceActions(){
+    const tbody=document.getElementById('listTableBody');
+    if(!tbody)return;
+    tbody.querySelectorAll('tr').forEach(row=>{
+      const cells=row.children;
+      if(cells.length<8)return;
+      const action=cells[7];
+      if(action.dataset.actionsReady==='1')return;
+      const id=getIncidentId(row);
+      if(!id || id==='-')return;
+
+      const status=normalizeStatus(row);
+      const isClosed=status==='close' || status==='closed';
+      const wrap=document.createElement('div');
+      wrap.className='incident-action-wrap';
+
+      let html='<a class="btn btn-sm btn-outline-primary" href="'+detailUrl(id)+'" title="Lihat detail"><i class="bi bi-eye"></i> Detail</a>';
+      if(!isClosed || isAdmin){
+        html+='<a class="btn btn-sm btn-outline-warning" href="'+editUrl(id)+'" title="Edit laporan"><i class="bi bi-pencil"></i> Edit</a>';
+        html+='<button type="button" class="btn btn-sm btn-outline-success" data-action="update" title="Update laporan"><i class="bi bi-check2-circle"></i> Update</button>';
+        html+='<button type="button" class="btn btn-sm btn-outline-danger" data-action="delete" title="Hapus laporan"><i class="bi bi-trash"></i> Delete</button>';
+      }
+      wrap.innerHTML=html;
+
+      const update=wrap.querySelector('[data-action="update"]');
+      const del=wrap.querySelector('[data-action="delete"]');
+      if(update)update.onclick=()=>openCloseModal(id);
+      if(del)del.onclick=()=>deleteIncidentFromList(id);
+
+      action.innerHTML='';
+      action.appendChild(wrap);
+      action.dataset.actionsReady='1';
+    });
+  }
+
+  function observeList(){
+    const tbody=document.getElementById('listTableBody');
+    if(!tbody){setTimeout(observeList,100);return;}
+    replaceActions();
+    const observer=new MutationObserver(()=>replaceActions());
+    observer.observe(tbody,{childList:true,subtree:true});
+  }
+
+  function modal(){
+    let b=document.getElementById('incidentCloseModal');
+    if(b)return b;
+    b=document.createElement('div');
+    b.id='incidentCloseModal';
+    b.className='incident-modal-backdrop';
+    b.innerHTML='<div class="incident-modal"><div class="d-flex justify-content-between align-items-center mb-3"><h5>Update Laporan</h5><button type="button" class="btn-close" data-close></button></div><div class="meta mb-3"><div><span class="text-muted">No. Insiden</span><br><strong id="closeIncidentId"></strong></div><div class="mt-2"><span class="text-muted">Status Setelah Update</span><br><span class="badge bg-success">CLOSE</span></div></div><label class="form-label fw-bold">Lampiran Penyelesaian <span class="text-muted fw-normal">(opsional)</span></label><input type="file" id="closeFile" class="form-control mb-3"><label class="form-label fw-bold">Catatan Penyelesaian</label><textarea id="closeNote" class="form-control mb-3" placeholder="Masukkan catatan penyelesaian..."></textarea><div class="d-flex justify-content-end gap-2"><button type="button" class="btn btn-outline-secondary" data-close>Batal</button><button type="button" class="btn btn-danger" id="closeSubmit"><i class="bi bi-check2-circle me-1"></i>Update & Close</button></div></div>';
+    document.body.appendChild(b);
+    b.querySelectorAll('[data-close]').forEach(x=>x.onclick=()=>b.classList.remove('show'));
+    return b;
+  }
+
+  function openCloseModal(id){
+    const b=modal();
+    b.dataset.incidentId=id;
+    b.querySelector('#closeIncidentId').textContent=id;
+    b.querySelector('#closeFile').value='';
+    b.querySelector('#closeNote').value='';
+    b.classList.add('show');
+    b.querySelector('#closeSubmit').onclick=()=>submitClose(b);
+  }
+
+  function setSubmitBusy(btn,busy){
+    btn.disabled=busy;
+    btn.innerHTML=busy?'<span class="spinner-border spinner-border-sm me-1"></span>Memproses...':'<i class="bi bi-check2-circle me-1"></i>Update & Close';
+  }
+
+  function submitClose(b){
+    const id=b.dataset.incidentId;
+    const file=b.querySelector('#closeFile').files[0];
+    const note=b.querySelector('#closeNote').value.trim();
+    const btn=b.querySelector('#closeSubmit');
+    setSubmitBusy(btn,true);
+    const finish=()=>{
+      google.script.run.withSuccessHandler(r=>{
+        if(typeof r==='string')try{r=JSON.parse(r)}catch(e){}
+        if(!r||!r.success){setSubmitBusy(btn,false);alert(r?.message||'Laporan gagal ditutup.');return}
+        b.classList.remove('show');
+        window.location.reload();
+      }).withFailureHandler(()=>{setSubmitBusy(btn,false);alert('Laporan gagal ditutup. Silakan coba lagi.')}).updateIncidentStatus(LIST_TOKEN,id,'Close',note);
+    };
+    if(!file){finish();return;}
+    const reader=new FileReader();
+    reader.onload=()=>{
+      try{
+        const dataUrl=String(reader.result||'');
+        const base64=dataUrl.split(',')[1]||'';
+        google.script.run.withSuccessHandler(r=>{
+          if(typeof r==='string')try{r=JSON.parse(r)}catch(e){}
+          if(!r||!r.success){setSubmitBusy(btn,false);alert(r?.message||'Lampiran gagal diupload. Silakan coba lagi.');return}
+          finish();
+        }).withFailureHandler(()=>{setSubmitBusy(btn,false);alert('Lampiran gagal diupload. Silakan coba lagi.')}).uploadAttachment(LIST_TOKEN,id,{bytes:base64,mimeType:file.type,fileName:file.name},'Penyelesaian');
+      }catch(e){setSubmitBusy(btn,false);alert('Lampiran gagal diproses. Silakan coba lagi.')}
+    };
+    reader.readAsDataURL(file);
+  }
+
+  function deleteIncidentFromList(id){
+    if(!confirm('Hapus laporan '+id+'?\n\nData yang sudah dihapus tidak dapat dikembalikan.'))return;
+    google.script.run.withSuccessHandler(r=>{
+      if(typeof r==='string')try{r=JSON.parse(r)}catch(e){}
+      if(!r||!r.success){alert(r?.message||'Laporan gagal dihapus.');return}
+      window.location.reload();
+    }).withFailureHandler(()=>alert('Laporan gagal dihapus. Silakan coba lagi.')).deleteIncident(LIST_TOKEN,id);
+  }
+
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',observeList);else observeList();
 })();
 </script>
