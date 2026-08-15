@@ -8,7 +8,6 @@ function uploadAttachment(token, idInsiden, fileObject, jenisLampiran) {
   try {
     const parentFolder = DriveApp.getFolderById(CONFIG.LAMPIRAN_FOLDER_ID);
     
-    // Sub-folder dinamis berdasarkan ID Insiden
     let targetFolder;
     const subFolders = parentFolder.getFoldersByName(idInsiden);
     if (subFolders.hasNext()) {
@@ -17,7 +16,6 @@ function uploadAttachment(token, idInsiden, fileObject, jenisLampiran) {
       targetFolder = parentFolder.createFolder(idInsiden);
     }
 
-    // Decode & Save File
     const blob = Utilities.newBlob(
       Utilities.base64Decode(fileObject.bytes), 
       fileObject.mimeType, 

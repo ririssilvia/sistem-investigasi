@@ -11,7 +11,6 @@
   <style>
     body { background-color: #ffffff !important; color: #1a1a1a; font-family: 'Segoe UI', sans-serif; overflow-x: hidden; margin: 0; }
     
-    /* Area Konten Utama */
     .main-content {
       margin-left: 260px !important;
       padding: 30px 40px;
@@ -34,23 +33,19 @@
 </head>
 <body>
 
-  <!-- 🔴 PANGGIL SIDEBAR KOMPONEN CUKUP 1 BARIS INI -->
   <?!= include('Sidebar', {
-  scriptUrl: scriptUrl,
-  token: token,
-  page: 'Dashboard',
-  userName: userName,
-  userSite: userSite,
-  userRole: userRole
-}); ?>
+    scriptUrl: scriptUrl,
+    token: token,
+    page: 'Dashboard',
+    userName: userName,
+    userSite: userSite,
+    userRole: userRole
+  }); ?>
 
-  <!-- AREA KONTEN UTAMA -->
   <div class="main-content" id="mainContent">
     
-    <!-- Header Bar -->
     <div class="d-flex justify-content-between align-items-center mb-4 pb-3 border-bottom">
       <div class="d-flex align-items-center gap-3">
-        <!-- Tombol Strip 3 Toggle Mini Sidebar -->
         <button type="button" class="btn btn-outline-danger border-0 p-2 fs-4" onclick="toggleSidebar()" title="Perkecil/Perbesar Sidebar">
           <i class="bi bi-list"></i>
         </button>
@@ -67,7 +62,6 @@
       </div>
     </div>
 
-    <!-- Stats Cards -->
     <div class="row g-3 mb-4">
       <div class="col-md-3">
         <div class="glass-card mb-0" style="border-left: 4px solid #e31e24;">
@@ -95,7 +89,6 @@
       </div>
     </div>
 
-    <!-- Tabel Preview Insiden -->
     <div class="glass-card">
       <h5 class="fw-bold text-dark mb-3">10 Laporan Insiden Terbaru</h5>
       <div class="table-responsive">
@@ -127,28 +120,44 @@
     window.addEventListener('DOMContentLoaded', () => {
       google.script.run
         .withSuccessHandler(renderDashboard)
-        .getDashboardStats(TOKEN);
+        .withFailureHandler(err => alert("Gagal memuat dashboard: " + err.message))
+        .getFilteredIncidents(TOKEN);
     });
 
     function renderDashboard(res) {
       if (!res.success) return alert(res.message);
 
-      document.getElementById('st-total').innerText = res.stats.total;
-      document.getElementById('st-open').innerText = res.stats.open;
-      document.getElementById('st-prog').innerText = res.stats.inProgress;
-      document.getElementById('st-close').innerText = res.stats.closed;
+      const rows = res.rows || [];
+      let total = rows.length;
+      let openCount = 0;
+      let progCount = 0;
+      let closeCount = 0;
+
+      rows.forEach(r => {
+        const st = String(r[37] || 'Open').trim();
+        if (st === 'Open') openCount++;
+        else if (st === 'In Progress') progCount++;
+        else if (st === 'Closed') closeCount++;
+      });
+
+      document.getElementById('st-total').innerText = total;
+      document.getElementById('st-open').innerText = openCount;
+      document.getElementById('st-prog').innerText = progCount;
+      document.getElementById('st-close').innerText = closeCount;
 
       const tbody = document.getElementById("dashTableBody");
       tbody.innerHTML = "";
 
-      if (!res.incidents || res.incidents.length === 0) {
+      if (rows.length === 0) {
         tbody.innerHTML = `<tr><td colspan="7" class="text-center py-4 text-muted">Belum ada laporan insiden.</td></tr>`;
         return;
       }
 
-      res.incidents.forEach(r => {
+      const recentRows = rows.slice(-10).reverse();
+
+      recentRows.forEach(r => {
         const id = r[1] || '-';
-        const tgl = r[3] ? new Date(r[3]).toLocaleDateString('id-ID') : '-';
+        const tgl = r[4] ? new Date(r[4]).toLocaleDateString('id-ID') : '-';
         const site = r[10] || '-';
         const pt = r[11] || '-';
         const klasifikasi = r[13] || '-';
@@ -167,7 +176,7 @@
             <td>${klasifikasi}</td>
             <td><span class="badge ${badgeStyle}">${st}</span></td>
             <td>
-              <a href="${SCRIPT_URL}?token=${TOKEN}&page=IncidentDetail&id=${id}" class="btn btn-sm btn-outline-danger">Detail</a>
+              <a href="${SCRIPT_URL}?token=${TOKEN}&page=IncidentEdit&id=${id}" class="btn btn-sm btn-outline-danger">Edit</a>
             </td>
           </tr>
         `;

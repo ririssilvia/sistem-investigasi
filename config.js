@@ -52,7 +52,7 @@ function getTransaksiSS() {
   return SpreadsheetApp.openById(CONFIG.SS_ID_TRANSAKSI);
 }
 
-/** Helper: Ambil semua data satu tab sebagai array of object (row 1 = header) */
+/** Helper: Ambil semua data satu tab sebagai array of object */
 function sheetToObjects(spreadsheet, tabName) {
   const sheet = spreadsheet.getSheetByName(tabName);
   if (!sheet) throw new Error('Tab tidak ditemukan: ' + tabName);
@@ -69,7 +69,7 @@ function sheetToObjects(spreadsheet, tabName) {
     });
 }
 
-/** Helper: Ambil satu kolom saja dari tab master sebagai array string */
+/** Helper: Ambil satu kolom saja dari tab master */
 function getMasterColumn(tabName, columnName) {
   const objs = sheetToObjects(getMasterSS(), tabName);
   return objs.map(o => o[columnName]).filter(v => v !== '' && v != null);

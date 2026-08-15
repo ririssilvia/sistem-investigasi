@@ -117,6 +117,8 @@
   </div>
 
   <script>
+    const SCRIPT_URL = "<?= scriptUrl ?>";
+
     function togglePassword() {
       const pw = document.getElementById('password');
       pw.type = pw.type === 'password' ? 'text' : 'password';
@@ -137,7 +139,7 @@
       google.script.run
         .withSuccessHandler(function(res) {
           if (res.success) {
-            window.top.location.href = '<?= scriptUrl ?>?token=' + res.token + '&page=Dashboard';
+            window.top.location.href = SCRIPT_URL + '?token=' + res.token + '&page=Dashboard';
           } else {
             errBox.textContent = res.message;
             errBox.style.display = 'block';

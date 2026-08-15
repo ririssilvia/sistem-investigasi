@@ -5,7 +5,6 @@
   <meta charset="utf-8">
   <title>Input Insiden Baru - HSE Portal Sinarmas</title>
 
-  <!-- CDN Bootstrap & Icons -->
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
 
@@ -15,8 +14,7 @@
       color: #1a1a1a;
       font-family: 'Segoe UI', sans-serif;
       overflow-x: hidden;
-      margin: 0;
-      padding: 0;
+      margin: 0; padding: 0;
     }
 
     .main-content {
@@ -82,8 +80,7 @@
 
 <body>
 
-  <!-- Component Sidebar -->
-  <?!= include('Views/Sidebar', {
+  <?!= include('Sidebar', {
     scriptUrl: scriptUrl,
     token: token,
     page: 'IncidentInput',
@@ -92,7 +89,6 @@
     userRole: userRole
   }); ?>
 
-  <!-- Area Utama -->
   <div class="main-content" id="mainContent">
 
     <div class="d-flex justify-content-between align-items-center mb-4 pb-3 border-bottom">
@@ -110,7 +106,6 @@
     <form id="formIncident">
       <div class="glass-card">
 
-        <!-- SECTION 1 -->
         <div class="section-title"><i class="bi bi-clock-history me-2"></i>1. Informasi Utama & Waktu Kejadian</div>
         <div class="row g-3 mb-4">
           <div class="col-md-4">
@@ -151,7 +146,6 @@
           </div>
         </div>
 
-        <!-- SECTION 2 -->
         <div class="section-title d-flex justify-content-between align-items-center">
           <span><i class="bi bi-person-badge me-2"></i>2. Entitas Perusahaan & Karyawan Terlibat</span>
           <button type="button" id="btnAddEmp" class="btn btn-sm btn-outline-danger fw-bold">
@@ -160,7 +154,6 @@
         </div>
         <div id="employeeListContainer" class="mb-4"></div>
 
-        <!-- SECTION 3 -->
         <div class="section-title"><i class="bi bi-journal-text me-2"></i>3. Kronologis & Peralatan Terlibat</div>
         <div class="row g-3 mb-4">
           <div class="col-12">
@@ -189,7 +182,6 @@
           </div>
         </div>
 
-        <!-- SECTION 4 -->
         <div class="section-title"><i class="bi bi-search me-2"></i>4. Analisis Penyebab (TTA, KTA, & Faktor Risiko)</div>
         <div class="row g-3 mb-4">
           <div class="col-md-6">
@@ -234,7 +226,6 @@
           </div>
         </div>
 
-        <!-- SECTION 5 -->
         <div class="section-title"><i class="bi bi-shield-check me-2"></i>5. Tindakan Perbaikan, Pencegahan, & Target Due Date</div>
         <div class="row g-3 mb-4">
           <div class="col-md-6">
@@ -251,7 +242,6 @@
           </div>
         </div>
 
-        <!-- SECTION 6 -->
         <div class="section-title d-flex justify-content-between align-items-center">
           <span><i class="bi bi-images me-2"></i>6. Upload Foto / Lampiran Media Awal</span>
           <button type="button" id="btnAddAttach" class="btn btn-sm btn-outline-danger fw-bold">
@@ -266,7 +256,6 @@
           </div>
         </div>
 
-        <!-- SUBMIT BUTTONS -->
         <div class="d-flex justify-content-between align-items-center pt-3 border-top">
           <a href="<?= scriptUrl ?>?token=<?= token ?>&page=IncidentList" class="btn btn-outline-secondary fw-bold">
             <i class="bi bi-arrow-left"></i> Batal / Kembali
@@ -281,7 +270,6 @@
 
   </div>
 
-  <!-- MODAL DIALOG -->
   <div class="modal fade" id="successModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
     <div class="modal-dialog modal-dialog-centered">
       <div class="modal-content border-0 shadow-lg rounded-4 overflow-hidden">
@@ -331,11 +319,10 @@
 
     let attachmentCount = 0;
     let employeeCount = 0;
-    let masterCache = null; // Murni dikosongkan, menunggu data dari Database Sheet Master
+    let masterCache = null;
     let redirectUrl = SCRIPT_URL + "?token=" + TOKEN + "&page=IncidentList";
     let countdownTimer = null;
 
-    // Helper mengisi dropdown select
     function populateSelect(selectEl, arrayItems) {
       if (!selectEl) return;
       selectEl.innerHTML = '<option value="">-- Pilih --</option>';
@@ -356,7 +343,6 @@
       if (el) populateSelect(el, items);
     }
 
-    // Mengisi seluruh dropdown utama dari Master Data
     function populateAllMainDropdowns() {
       if (!masterCache) return;
       populateById("in_jam", masterCache.jam);
@@ -380,7 +366,6 @@
       populateById("in_ketKendali", masterCache.ketKurangKendali);
     }
 
-    // Tambah Baris Karyawan Dinamis (+)
     function createEmployeeRow() {
       employeeCount++;
       const container = document.getElementById('employeeListContainer');
@@ -435,11 +420,8 @@
       container.appendChild(div);
 
       const delBtn = div.querySelector('.btn-del-emp');
-      if (delBtn) {
-        delBtn.addEventListener('click', () => div.remove());
-      }
+      if (delBtn) delBtn.addEventListener('click', () => div.remove());
 
-      // Isi pilihan dari Master Data yang didapat dari server
       if (masterCache) {
         populateSelect(div.querySelector('.emp-perusahaan'), masterCache.perusahaan);
         populateSelect(div.querySelector('.emp-departemen'), masterCache.departemen);
@@ -450,7 +432,6 @@
       }
     }
 
-    // Tambah Baris Lampiran (+)
     function createAttachmentRow() {
       attachmentCount++;
       const container = document.getElementById('attachmentListContainer');
@@ -546,7 +527,6 @@
     }
 
     document.addEventListener('DOMContentLoaded', function() {
-      // Event tombol Tambah (+)
       document.getElementById('btnAddEmp').addEventListener('click', createEmployeeRow);
       document.getElementById('btnAddAttach').addEventListener('click', createAttachmentRow);
       document.getElementById('btnManualRedirect').addEventListener('click', doRedirect);
@@ -560,16 +540,14 @@
         document.getElementById('in_bulan').value = months[date.getMonth()];
       });
 
-      // 1. Buat 1 baris lampiran awal
       createAttachmentRow();
 
-      // 2. MANGGIL DATA MURNI DARI TAB SHEET MASTER (Google Apps Script Server)
       google.script.run
         .withSuccessHandler(res => {
           if (res && res.success && res.master) {
-            masterCache = res.master; // Simpan data dari sheet master
-            populateAllMainDropdowns(); // Isi semua dropdown form
-            createEmployeeRow(); // Buat baris karyawan pertama dengan dropdown terisi
+            masterCache = res.master;
+            populateAllMainDropdowns();
+            createEmployeeRow();
           } else {
             alert("⚠️ Gagal memuat Master Data: " + (res ? res.message : "Error"));
           }
@@ -579,7 +557,6 @@
         })
         .getFormMasterData(TOKEN);
 
-      // 3. Submit Form
       document.getElementById('formIncident').addEventListener('submit', async function(e) {
         e.preventDefault();
         const btn = document.getElementById("btnSubmit");
@@ -728,7 +705,7 @@
           .saveIncidentReport(TOKEN, formData);
       });
 
-    })();
+    });
   })();
 </script>
 </body>

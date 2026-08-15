@@ -3,37 +3,9 @@
  */
 
 const SESSION_TAB = 'Sessions';
-const SESSION_DURATION_NORMAL_MS = 8 * 60 * 60 * 1000;      // 8 Jam
-const SESSION_DURATION_REMEMBER_MS = 30 * 24 * 60 * 60 * 1000; // 30 Hari
+const SESSION_DURATION_NORMAL_MS = 8 * 60 * 60 * 1000;
+const SESSION_DURATION_REMEMBER_MS = 30 * 24 * 60 * 60 * 1000;
 
-/**
- * Pintu masuk utama Web App
- */
-function doGet(e) {
-  const token = e && e.parameter && e.parameter.token;
-  const session = token ? getValidSession(token) : null;
-
-  if (session) {
-    const template = HtmlService.createTemplateFromFile('Views/Dashboard');
-    template.userName = session.Nama || session.Username;
-    template.userRole = session.Role;
-    template.userSite = session.Site;
-    template.token = token;
-    return template.evaluate()
-      .setTitle('Monitoring Investigasi HSE')
-      .addMetaTag('viewport', 'width=device-width, initial-scale=1');
-  }
-
-  const template = HtmlService.createTemplateFromFile('Views/Login');
-  template.scriptUrl = ScriptApp.getService().getUrl();
-  return template.evaluate()
-    .setTitle('Monitoring Investigasi HSE — Login')
-    .addMetaTag('viewport', 'width=device-width, initial-scale=1');
-}
-
-/**
- * Dipanggil dari Login.html
- */
 function attemptLogin(username, password, rememberMe) {
   const users = sheetToObjects(getMasterSS(), CONFIG.TAB_USERS);
   
@@ -106,9 +78,6 @@ function requireSession(token) {
   return session;
 }
 
-/**
- * Mengambil data terfilter otomatis berdasarkan Site user yang sedang login
- */
 function getFilteredIncidents(token) {
   const session = requireSession(token);
   const ssTransaksi = getTransaksiSS();
@@ -125,11 +94,8 @@ function getFilteredIncidents(token) {
 
   const filteredRows = values.slice(1).filter(row => {
     if (!row.some(cell => cell !== '' && cell !== null)) return false;
-
-    // Admin bisa lihat semua data
     if (String(session.Role).toLowerCase() === 'admin') return true;
 
-    // User biasa hanya melihat data dari Site miliknya
     if (siteColIdx !== -1) {
       return String(row[siteColIdx]).trim().toLowerCase() === String(session.Site).trim().toLowerCase();
     }
