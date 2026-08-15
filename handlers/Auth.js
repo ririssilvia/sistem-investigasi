@@ -28,11 +28,23 @@ function createSession(user, rememberMe) {
   return token;
 }
 
+function normalizeSessionToken_(token) {
+  return String(token == null ? '' : token).replace(/[\u200B-\u200D\uFEFF]/g, '').trim();
+}
+
 function getValidSession(token) {
   try {
+    const normalizedToken = normalizeSessionToken_(token);
+    if (!normalizedToken) return null;
     const sessions = sheetToObjects(getMasterSS(), SESSION_TAB);
-    const session = sessions.find(s => String(s.Token || '') === String(token || ''));
-    if (!session || new Date(session.ExpiresAt) < new Date()) return null;
+    const session = sessions.find(s => normalizeSessionToken_(s.Token) === normalizedToken);
+    if (!session) return null;
+
+    const expiresAt = session.ExpiresAt instanceof Date ? session.ExpiresAt : new Date(session.ExpiresAt);
+    if (isNaN(expiresAt.getTime()) || expiresAt.getTime() <= Date.now()) return null;
+
+    // Selalu kembalikan token yang bersih agar request berikutnya konsisten.
+    session.Token = normalizedToken;
     return session;
   } catch (e) {
     return null;
@@ -40,17 +52,19 @@ function getValidSession(token) {
 }
 
 function logoutSession(token) {
+  const normalizedToken = normalizeSessionToken_(token);
   const sheet = getMasterSS().getSheetByName(SESSION_TAB);
   if (!sheet) return { success: true };
   const values = sheet.getDataRange().getValues();
   for (let i = 1; i < values.length; i++) {
-    if (values[i][0] === token) { sheet.deleteRow(i + 1); break; }
+    if (normalizeSessionToken_(values[i][0]) === normalizedToken) { sheet.deleteRow(i + 1); break; }
   }
   return { success: true };
 }
 
 function requireSession(token) {
-  const session = getValidSession(token);
+  const normalizedToken = normalizeSessionToken_(token);
+  const session = getValidSession(normalizedToken);
   if (!session) throw new Error('Sesi telah berakhir atau tidak valid. Silakan login kembali.');
   return session;
 }
@@ -155,7 +169,7 @@ function getFilteredIncidentRows_(token, filters) {
 
 function getFilteredIncidents(token, filters) {
   try {
-    const result = getFilteredIncidentRows_(token, filters || {});
+    const result = getFilteredIncidentRows_(normalizeSessionToken_(token), filters || {});
     return {
       success: true,
       session: result.session,
@@ -172,7 +186,7 @@ function getFilteredIncidents(token, filters) {
 }
 
 function exportIncidentExcel(token, filters) {
-  const result = getFilteredIncidentRows_(token, filters || {});
+  const result = getFilteredIncidentRows_(normalizeSessionToken_(token), filters || {});
   if (!result.rows.length) return { success: false, message: 'Tidak ada data yang sesuai dengan filter untuk diexport.' };
 
   const tempName = 'EXPORT_INCIDENT_' + Utilities.formatDate(new Date(), Session.getScriptTimeZone(), 'yyyyMMdd_HHmmss');
