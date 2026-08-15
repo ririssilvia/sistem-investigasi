@@ -4,207 +4,203 @@
   <base target="_top">
   <meta charset="utf-8">
   <title>Data Laporan - HSE Portal Sinarmas</title>
-  
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
-
   <style>
-    body { 
-      background-color: #ffffff !important; 
-      color: #1a1a1a; 
-      font-family: 'Segoe UI', sans-serif;
-      overflow-x: hidden;
-      margin: 0; padding: 0;
-    }
-    
-    .main-content {
-      margin-left: 260px !important;
-      padding: 30px 40px;
-      transition: margin-left 0.3s ease !important;
-      background-color: #ffffff !important;
-      min-height: 100vh;
-    }
-    .main-content.mini-content { margin-left: 70px !important; }
-
-    .glass-card {
-      background: #ffffff;
-      border: 1px solid #e2e8f0;
-      border-radius: 12px;
-      padding: 24px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.03);
-      margin-bottom: 24px;
-    }
-
-    .table-sinarmas { width: 100%; border-collapse: separate; border-spacing: 0; }
-    .table-sinarmas th { background: #e31e24; color: #ffffff; padding: 12px 16px; font-size: 13px; font-weight: 700; border: none; }
-    .table-sinarmas td { padding: 12px 16px; border-bottom: 1px solid #e2e8f0; font-size: 13px; vertical-align: middle; background-color: #ffffff; }
-    .table-sinarmas tbody tr:hover td { background-color: #fff0f1; }
-
-    .btn-sinarmas { background: #e31e24; color: #fff; font-weight: 600; border: none; padding: 10px 20px; border-radius: 8px; text-decoration: none; }
-    .btn-sinarmas:hover { background: #b81419; color: #fff; }
-
-    .form-control-search, .form-select-filter {
-      border: 1px solid #cbd5e1;
-      border-radius: 8px;
-      padding: 8px 14px;
-      font-size: 13.5px;
-    }
-
-    @media (max-width: 991px) { .main-content { margin-left: 0 !important; padding: 20px; } }
+    body{background:#fff!important;color:#1a1a1a;font-family:'Segoe UI',sans-serif;overflow-x:hidden;margin:0;padding:0}
+    .main-content{margin-left:260px!important;padding:30px 40px;transition:margin-left .3s ease!important;background:#fff!important;min-height:100vh}
+    .main-content.mini-content{margin-left:70px!important}
+    .glass-card{background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:24px;box-shadow:0 4px 12px rgba(0,0,0,.03);margin-bottom:24px}
+    .table-sinarmas{width:100%;border-collapse:separate;border-spacing:0}
+    .table-sinarmas th{background:#e31e24;color:#fff;padding:12px 16px;font-size:13px;font-weight:700;border:none;white-space:nowrap}
+    .table-sinarmas td{padding:12px 16px;border-bottom:1px solid #e2e8f0;font-size:13px;vertical-align:middle;background:#fff}
+    .table-sinarmas tbody tr:hover td{background:#fff0f1}
+    .btn-sinarmas{background:#e31e24;color:#fff;font-weight:600;border:none;padding:10px 20px;border-radius:8px;text-decoration:none}
+    .btn-sinarmas:hover{background:#b81419;color:#fff}
+    .btn-export{background:#198754;color:#fff;font-weight:600;border:none;padding:10px 18px;border-radius:8px}
+    .btn-export:hover{background:#157347;color:#fff}
+    .form-control-search,.form-select-filter,.form-control-date{border:1px solid #cbd5e1;border-radius:8px;padding:8px 14px;font-size:13.5px}
+    .filter-label{font-size:12px;font-weight:700;color:#64748b;text-transform:uppercase}
+    .loading-row{padding:28px!important}
+    @media(max-width:991px){.main-content{margin-left:0!important;padding:20px}.main-content.mini-content{margin-left:0!important}}
   </style>
 </head>
 <body>
-
-  <?!= include('Sidebar', {
-    scriptUrl: scriptUrl,
-    token: token,
-    page: 'IncidentList',
-    userName: userName,
-    userSite: userSite,
-    userRole: userRole
-  }); ?>
+  <?!= include('Sidebar', {scriptUrl:scriptUrl, token:token, page:'IncidentList', userName:userName, userSite:userSite, userRole:userRole}); ?>
 
   <div class="main-content" id="mainContent">
-    
-    <div class="d-flex justify-content-between align-items-center mb-4 pb-3 border-bottom">
+    <div class="d-flex justify-content-between align-items-center mb-4 pb-3 border-bottom gap-3 flex-wrap">
       <div class="d-flex align-items-center gap-3">
-        <button type="button" class="btn btn-outline-danger border-0 p-2 fs-4" onclick="toggleSidebar()" title="Perkecil/Perbesar Sidebar">
-          <i class="bi bi-list"></i>
-        </button>
+        <button type="button" class="btn btn-outline-danger border-0 p-2 fs-4" onclick="toggleSidebar()" title="Perkecil/Perbesar Sidebar"><i class="bi bi-list"></i></button>
         <div>
           <h3 class="fw-bold mb-0 text-dark">Data Laporan Insiden</h3>
-          <small class="text-muted">Menampilkan seluruh daftar laporan untuk Site: <strong><?= userSite ?></strong></small>
+          <small class="text-muted">Menampilkan daftar laporan untuk Site: <strong><?= userSite ?></strong></small>
         </div>
       </div>
-
       <div class="d-flex gap-2">
-        <a href="<?= scriptUrl ?>?token=<?= token ?>&page=IncidentInput" class="btn btn-sinarmas">
-          + Buat Laporan Baru
-        </a>
+        <button type="button" class="btn-export" id="btnExport" onclick="exportExcel()"><i class="bi bi-file-earmark-excel me-1"></i> Export Excel</button>
+        <a href="<?= scriptUrl ?>?token=<?= token ?>&page=IncidentInput" class="btn btn-sinarmas">+ Buat Laporan Baru</a>
       </div>
     </div>
 
     <div class="glass-card mb-4">
       <div class="row g-3">
-        <div class="col-md-8">
-          <label class="form-label fw-bold text-secondary" style="font-size: 12px;">PENCARIAN CEPAT</label>
+        <div class="col-12">
+          <label class="filter-label mb-1">Pencarian Cepat</label>
           <div class="input-group">
             <span class="input-group-text bg-white"><i class="bi bi-search text-muted"></i></span>
-            <input type="text" id="searchInput" class="form-control form-control-search" placeholder="Cari No Insiden, Perusahaan, atau Kronologis..." onkeyup="filterData()">
+            <input type="text" id="searchInput" class="form-control form-control-search" placeholder="Cari No Insiden, Perusahaan, Karyawan, atau Kronologis...">
           </div>
         </div>
-        <div class="col-md-4">
-          <label class="form-label fw-bold text-secondary" style="font-size: 12px;">FILTER STATUS</label>
-          <select id="filterStatus" class="form-select form-select-filter" onchange="filterData()">
-            <option value="">-- Semua Status --</option>
-            <option value="Open">Open</option>
-            <option value="In Progress">In Progress</option>
-            <option value="Closed">Closed</option>
-          </select>
+        <div class="col-md-3">
+          <label class="filter-label mb-1">Start Date</label>
+          <input type="date" id="startDate" class="form-control form-control-date">
+        </div>
+        <div class="col-md-3">
+          <label class="filter-label mb-1">End Date</label>
+          <input type="date" id="endDate" class="form-control form-control-date">
+        </div>
+        <div class="col-md-3">
+          <label class="filter-label mb-1">Site</label>
+          <select id="filterSite" class="form-select form-select-filter"><option value="">-- Semua Site --</option></select>
+        </div>
+        <div class="col-md-3">
+          <label class="filter-label mb-1">Status Laporan</label>
+          <select id="filterStatus" class="form-select form-select-filter"><option value="">-- Semua Status --</option></select>
+        </div>
+        <div class="col-12 d-flex justify-content-end gap-2">
+          <button type="button" class="btn btn-outline-secondary" onclick="resetFilters()"><i class="bi bi-arrow-counterclockwise me-1"></i> Reset Filter</button>
+          <button type="button" class="btn btn-danger" onclick="loadData()"><i class="bi bi-funnel me-1"></i> Terapkan Filter</button>
         </div>
       </div>
     </div>
 
     <div class="glass-card">
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <div class="fw-bold">Daftar Laporan</div>
+        <small class="text-muted" id="totalInfo">Memuat...</small>
+      </div>
       <div class="table-responsive">
         <table class="table-sinarmas">
           <thead>
             <tr>
-              <th>No Insiden</th>
-              <th>Tanggal</th>
-              <th>Site</th>
-              <th>Perusahaan</th>
-              <th>Klasifikasi</th>
-              <th>Status</th>
-              <th class="text-center" style="width: 220px;">Aksi</th>
+              <th>No Insiden</th><th>Tanggal</th><th>Site</th><th>Perusahaan</th><th>Klasifikasi</th><th>Karyawan</th><th>Status</th><th class="text-center">Aksi</th>
             </tr>
           </thead>
-          <tbody id="listTableBody">
-            <tr><td colspan="7" class="text-center py-4 text-muted">Memuat data laporan insiden...</td></tr>
-          </tbody>
+          <tbody id="listTableBody"><tr><td colspan="8" class="text-center text-muted loading-row">Memuat data laporan insiden...</td></tr></tbody>
         </table>
       </div>
     </div>
-
   </div>
 
-  <script>
-    const TOKEN = "<?= token ?>";
-    const SCRIPT_URL = "<?= scriptUrl ?>";
-    let ALL_DATA = [];
+<script>
+const TOKEN = <?= JSON.stringify(token) ?>;
+const SCRIPT_URL = <?= JSON.stringify(scriptUrl) ?>;
+let ALL_DATA=[];
+let HEADERS=[];
+let IDX={id:-1,date:-1,site:-1,company:-1,status:-1,classification:-1,employee:-1,chronology:-1};
+let IS_LOADING=false;
 
-    window.addEventListener('DOMContentLoaded', () => {
-      google.script.run
-        .withSuccessHandler(renderListTable)
-        .withFailureHandler(err => alert("Gagal memuat data: " + err.message))
-        .getFilteredIncidents(TOKEN);
-    });
+window.addEventListener('DOMContentLoaded',()=>{
+  document.getElementById('searchInput').addEventListener('keydown',e=>{if(e.key==='Enter')loadData()});
+  loadData();
+});
 
-    function renderListTable(res) {
-      if (!res.success) {
-        alert(res.message);
-        return;
-      }
+function normalizeHeader(v){return String(v||'').trim().toLowerCase().replace(/[\s_\-\/]+/g,' ')}
+function findIdx(candidates){
+  const h=HEADERS.map(normalizeHeader), c=candidates.map(normalizeHeader);
+  for(const x of c){const i=h.indexOf(x);if(i!==-1)return i}
+  for(let i=0;i<h.length;i++){if(c.some(x=>x && (h[i].includes(x)||x.includes(h[i]))))return i}
+  return -1;
+}
+function buildIndices(){
+  IDX.id=findIdx(['Nomor Insiden','No Insiden','No. Insiden','ID Insiden','Incident Number']);
+  IDX.date=findIdx(['Tanggal Kejadian','Tanggal','Date of Incident','Incident Date']);
+  IDX.site=findIdx(['Site/Business Unit (BU)','Site','Business Unit','Business Unit (BU)']);
+  IDX.company=findIdx(['Perusahaan','Nama Perusahaan','Company']);
+  IDX.status=findIdx(['Status Laporan','Status','Status Incident','Status Insiden']);
+  IDX.classification=findIdx(['Klasifikasi','Klasifikasi Insiden','Classification']);
+  IDX.employee=findIdx(['Karyawan','Nama Karyawan','Nama Karyawan Terlibat','Employee']);
+  IDX.chronology=findIdx(['Kronologis','Uraian Kronologis Kejadian','Kronologi']);
+}
+function val(row,idx,def='-'){const v=idx>=0?row[idx]:'';return v===null||v===undefined||String(v)===''?def:v}
+function escapeHtml(v){return String(v??'').replace(/[&<>'"]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[m]))}
+function formatDate(v){if(!v)return '-';const d=new Date(v);return isNaN(d.getTime())?String(v):d.toLocaleDateString('id-ID')}
 
-      ALL_DATA = res.rows;
-      displayRows(ALL_DATA);
-    }
+function loadData(){
+  if(IS_LOADING)return;
+  IS_LOADING=true;
+  setLoading(true,'Memuat data laporan insiden...');
+  const filters={search:document.getElementById('searchInput').value.trim(),startDate:document.getElementById('startDate').value,endDate:document.getElementById('endDate').value,site:document.getElementById('filterSite').value,status:document.getElementById('filterStatus').value};
+  google.script.run.withSuccessHandler(res=>{
+    IS_LOADING=false;
+    if(!res){showError('Server mengembalikan response kosong. Pastikan Apps Script sudah di-deploy ulang dari kode GitHub terbaru.');return}
+    if(res.success!==true){showError(res.message||'Gagal memuat data laporan.');return}
+    HEADERS=res.headers||[]; buildIndices(); ALL_DATA=res.rows||[];
+    populateFilters(res.filterOptions||{});
+    displayRows(groupRows(ALL_DATA));
+    document.getElementById('totalInfo').textContent=(res.total||0)+' baris transaksi / '+groupRows(ALL_DATA).length+' laporan';
+  }).withFailureHandler(err=>{IS_LOADING=false;showError('Gagal memuat data: '+(err&&err.message?err.message:err))}).getFilteredIncidents(TOKEN,filters);
+}
 
-    function displayRows(rows) {
-      const tbody = document.getElementById("listTableBody");
-      tbody.innerHTML = "";
+function populateFilters(options){
+  const site=document.getElementById('filterSite'), status=document.getElementById('filterStatus');
+  const currentSite=site.value,currentStatus=status.value;
+  const sites=options.sites||[], statuses=options.statuses||[];
+  site.innerHTML='<option value="">-- Semua Site --</option>'+sites.map(v=>`<option value="${escapeHtml(v)}">${escapeHtml(v)}</option>`).join('');
+  status.innerHTML='<option value="">-- Semua Status --</option>'+statuses.map(v=>`<option value="${escapeHtml(v)}">${escapeHtml(v)}</option>`).join('');
+  if(sites.includes(currentSite))site.value=currentSite;
+  if(statuses.includes(currentStatus))status.value=currentStatus;
+}
 
-      if (!rows || rows.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="7" class="text-center py-4 text-muted">Data laporan tidak ditemukan.</td></tr>`;
-        return;
-      }
+function groupRows(rows){
+  const map=new Map();
+  rows.forEach(row=>{
+    const id=String(val(row,IDX.id,''));
+    const key=id||JSON.stringify(row);
+    if(!map.has(key))map.set(key,{row:row,count:0});
+    map.get(key).count++;
+  });
+  return Array.from(map.values());
+}
 
-      rows.forEach(r => {
-        const id = r[1] || '-';
-        const tgl = r[4] ? new Date(r[4]).toLocaleDateString('id-ID') : '-';
-        const site = r[10] || '-';
-        const pt = r[11] || '-';
-        const klasifikasi = r[13] || '-';
-        const st = r[37] || 'Open';
+function displayRows(groups){
+  const tbody=document.getElementById('listTableBody'); tbody.innerHTML='';
+  if(!groups.length){tbody.innerHTML='<tr><td colspan="8" class="text-center py-4 text-muted">Data laporan tidak ditemukan.</td></tr>';return}
+  groups.forEach(g=>{
+    const r=g.row, id=val(r,IDX.id), st=String(val(r,IDX.status,'Open'));
+    let badge='bg-danger'; if(st.toLowerCase()==='closed')badge='bg-success'; else if(st.toLowerCase().includes('progress'))badge='bg-warning text-dark';
+    const employeeCount=g.count;
+    tbody.insertAdjacentHTML('beforeend',`<tr>
+      <td class="fw-bold text-danger">${escapeHtml(id)}</td>
+      <td>${escapeHtml(formatDate(val(r,IDX.date,'')))}</td>
+      <td>${escapeHtml(val(r,IDX.site))}</td>
+      <td>${escapeHtml(val(r,IDX.company))}</td>
+      <td>${escapeHtml(val(r,IDX.classification))}</td>
+      <td>${employeeCount} karyawan</td>
+      <td><span class="badge ${badge}">${escapeHtml(st)}</span></td>
+      <td class="text-center"><a href="${SCRIPT_URL}?token=${encodeURIComponent(TOKEN)}&page=IncidentEdit&id=${encodeURIComponent(id)}" class="btn btn-outline-warning btn-sm"><i class="bi bi-pencil"></i> Edit</a></td>
+    </tr>`);
+  });
+}
+function setLoading(on,text){if(on){document.getElementById('listTableBody').innerHTML=`<tr><td colspan="8" class="text-center text-muted loading-row"><span class="spinner-border spinner-border-sm me-2"></span>${text}</td></tr>`}}
+function showError(message){document.getElementById('totalInfo').textContent='Gagal memuat';document.getElementById('listTableBody').innerHTML=`<tr><td colspan="8" class="text-center text-danger py-4"><i class="bi bi-exclamation-triangle me-1"></i>${escapeHtml(message)}</td></tr>`}
+function resetFilters(){document.getElementById('searchInput').value='';document.getElementById('startDate').value='';document.getElementById('endDate').value='';document.getElementById('filterSite').value='';document.getElementById('filterStatus').value='';loadData()}
 
-        let badgeStyle = 'bg-danger';
-        if (st === 'In Progress') badgeStyle = 'bg-warning text-dark';
-        if (st === 'Closed') badgeStyle = 'bg-success';
-
-        tbody.innerHTML += `
-          <tr>
-            <td class="fw-bold text-danger">${id}</td>
-            <td>${tgl}</td>
-            <td>${site}</td>
-            <td>${pt}</td>
-            <td>${klasifikasi}</td>
-            <td><span class="badge ${badgeStyle}">${st}</span></td>
-            <td class="text-center">
-              <div class="btn-group btn-group-sm" role="group">
-                <a href="${SCRIPT_URL}?token=${TOKEN}&page=IncidentEdit&id=${id}" class="btn btn-outline-warning" title="Edit Data Laporan">
-                  <i class="bi bi-pencil"></i> Edit
-                </a>
-              </div>
-            </td>
-          </tr>
-        `;
-      });
-    }
-
-    function filterData() {
-      const search = document.getElementById("searchInput").value.toLowerCase();
-      const statusFilter = document.getElementById("filterStatus").value;
-
-      const filtered = ALL_DATA.filter(r => {
-        const textMatch = String(r[1]).toLowerCase().includes(search) || 
-                          String(r[11]).toLowerCase().includes(search) || 
-                          String(r[9]).toLowerCase().includes(search);
-        const statusMatch = statusFilter === "" || String(r[37]) === statusFilter;
-        return textMatch && statusMatch;
-      });
-
-      displayRows(filtered);
-    }
-  </script>
+function exportExcel(){
+  const btn=document.getElementById('btnExport');
+  const filters={search:document.getElementById('searchInput').value.trim(),startDate:document.getElementById('startDate').value,endDate:document.getElementById('endDate').value,site:document.getElementById('filterSite').value,status:document.getElementById('filterStatus').value};
+  btn.disabled=true;btn.innerHTML='<span class="spinner-border spinner-border-sm me-1"></span> Membuat Excel...';
+  google.script.run.withSuccessHandler(res=>{
+    btn.disabled=false;btn.innerHTML='<i class="bi bi-file-earmark-excel me-1"></i> Export Excel';
+    if(!res||res.success!==true){alert((res&&res.message)||'Gagal membuat file Excel.');return}
+    const a=document.createElement('a');a.href=res.downloadUrl;a.target='_blank';a.rel='noopener';a.click();
+    alert('Export berhasil: '+res.fileName+' ('+res.total+' baris transaksi).');
+  }).withFailureHandler(err=>{
+    btn.disabled=false;btn.innerHTML='<i class="bi bi-file-earmark-excel me-1"></i> Export Excel';
+    alert('Gagal export Excel: '+(err&&err.message?err.message:err));
+  }).exportIncidentExcel(TOKEN,filters);
+}
+</script>
 </body>
 </html>
