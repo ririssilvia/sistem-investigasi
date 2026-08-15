@@ -15,6 +15,8 @@
     .btn-sinarmas:hover{background:#b81419;color:#fff}
     .form-control,.form-select{border-radius:8px;border:1px solid #cbd5e1;padding:10px 14px;font-size:13.5px}
     .form-control:focus,.form-select:focus{border-color:#e31e24;box-shadow:0 0 0 .2rem rgba(227,30,36,.15)}
+    .emp-card{position:relative}
+    .emp-number{font-size:13px;font-weight:700;color:#e31e24}
     @media(max-width:991px){.main-content{margin-left:0!important;padding:20px}}
   </style>
 </head>
@@ -108,37 +110,131 @@
     byId('in_tta',masterCache.tta); byId('in_ketTta',masterCache.ketTta); byId('in_kta',masterCache.kta); byId('in_ketKta',masterCache.ketKta);
     byId('in_faktorManusia',masterCache.faktorManusia); byId('in_ketManusia',masterCache.ketFaktorManusia); byId('in_faktorPekerjaan',masterCache.faktorPekerjaan); byId('in_ketPekerjaan',masterCache.ketFaktorPekerjaan); byId('in_kurangKendali',masterCache.kurangKendali); byId('in_ketKendali',masterCache.ketKurangKendali);
   }
+  function renumberEmployees(){
+    document.querySelectorAll('#employeeListContainer .emp-card').forEach((card,index)=>{
+      const n=card.querySelector('.emp-number');
+      if(n) n.textContent='Karyawan Terlibat #'+(index+1);
+    });
+  }
   function createEmployeeRow(){
-    employeeCount++; const c=document.getElementById('employeeListContainer'); if(!c)return;
-    const d=document.createElement('div'); d.className='card p-3 mb-3 border border-light-subtle shadow-sm rounded-3 emp-card';
-    d.innerHTML=`<div class="d-flex justify-content-between align-items-center mb-2 pb-2 border-bottom"><span class="fw-bold text-danger small">Karyawan Terlibat #${employeeCount}</span>${employeeCount>1?'<button type="button" class="btn btn-outline-danger btn-sm btn-del-emp">Hapus</button>':''}</div><div class="row g-3"><div class="col-md-4"><label class="form-label fw-bold small">Perusahaan *</label><select class="form-select emp-perusahaan" required></select></div><div class="col-md-4"><label class="form-label fw-bold small">Departemen *</label><select class="form-select emp-departemen" required></select></div><div class="col-md-4"><label class="form-label fw-bold small">Klasifikasi Kecelakaan *</label><select class="form-select emp-klasifikasi" required></select></div><div class="col-md-4"><label class="form-label fw-bold small">Nama Karyawan</label><input class="form-control emp-karyawan"></div><div class="col-md-4"><label class="form-label fw-bold small">Jabatan</label><select class="form-select emp-jabatan"></select></div><div class="col-md-2"><label class="form-label fw-bold small">Umur</label><select class="form-select emp-umur"></select></div><div class="col-md-2"><label class="form-label fw-bold small">Masa Kerja</label><select class="form-select emp-masaKerja"></select></div></div>`;
+    if(!masterCache){ alert('Master Data masih dimuat. Silakan tunggu sebentar.'); return; }
+    employeeCount++;
+    const c=document.getElementById('employeeListContainer');
+    if(!c) return;
+    const d=document.createElement('div');
+    d.className='card p-3 mb-3 border border-light-subtle shadow-sm rounded-3 emp-card';
+    d.innerHTML=`<div class="d-flex justify-content-between align-items-center mb-2 pb-2 border-bottom"><span class="emp-number">Karyawan Terlibat #${employeeCount}</span>${employeeCount>1?'<button type="button" class="btn btn-outline-danger btn-sm btn-del-emp"><i class="bi bi-trash me-1"></i>Hapus</button>':''}</div><div class="row g-3"><div class="col-md-4"><label class="form-label fw-bold small">Perusahaan *</label><select class="form-select emp-perusahaan" required></select></div><div class="col-md-4"><label class="form-label fw-bold small">Departemen *</label><select class="form-select emp-departemen" required></select></div><div class="col-md-4"><label class="form-label fw-bold small">Klasifikasi Kecelakaan *</label><select class="form-select emp-klasifikasi" required></select></div><div class="col-md-4"><label class="form-label fw-bold small">Nama Karyawan Terlibat</label><input type="text" class="form-control emp-karyawan" placeholder="Nama korban/karyawan"></div><div class="col-md-4"><label class="form-label fw-bold small">Jabatan</label><select class="form-select emp-jabatan"></select></div><div class="col-md-2"><label class="form-label fw-bold small">Umur</label><select class="form-select emp-umur"></select></div><div class="col-md-2"><label class="form-label fw-bold small">Masa Kerja</label><select class="form-select emp-masaKerja"></select></div></div>`;
     c.appendChild(d);
-    const del=d.querySelector('.btn-del-emp'); if(del)del.onclick=()=>d.remove();
-    populateSelect(d.querySelector('.emp-perusahaan'),masterCache?.perusahaan); populateSelect(d.querySelector('.emp-departemen'),masterCache?.departemen); populateSelect(d.querySelector('.emp-klasifikasi'),masterCache?.klasifikasi); populateSelect(d.querySelector('.emp-jabatan'),masterCache?.jabatan); populateSelect(d.querySelector('.emp-umur'),masterCache?.umur); populateSelect(d.querySelector('.emp-masaKerja'),masterCache?.masaKerja);
+    const del=d.querySelector('.btn-del-emp');
+    if(del) del.addEventListener('click',function(){ d.remove(); employeeCount=Math.max(0,employeeCount-1); renumberEmployees(); });
+    populateSelect(d.querySelector('.emp-perusahaan'),masterCache.perusahaan);
+    populateSelect(d.querySelector('.emp-departemen'),masterCache.departemen);
+    populateSelect(d.querySelector('.emp-klasifikasi'),masterCache.klasifikasi);
+    populateSelect(d.querySelector('.emp-jabatan'),masterCache.jabatan);
+    populateSelect(d.querySelector('.emp-umur'),masterCache.umur);
+    populateSelect(d.querySelector('.emp-masaKerja'),masterCache.masaKerja);
+    d.scrollIntoView({behavior:'smooth',block:'center'});
   }
   function createAttachmentRow(){
-    attachmentCount++; const c=document.getElementById('attachmentListContainer'); const d=document.createElement('div'); d.className='card p-3 mb-3';
-    d.innerHTML=`<div class="row g-3 align-items-center"><div class="col-md-5"><label class="form-label fw-bold small">File #${attachmentCount}</label><input type="file" class="form-control file-input-item" accept="image/*,application/pdf"></div><div class="col-md-5"><label class="form-label fw-bold small">Tipe</label><select class="form-select file-type-item"><option>Foto Kejadian Awal</option><option>Foto Kerusakan Unit</option><option>Foto Sketsa / Peta</option><option>Dokumen BAP / Kronologis</option><option>Lampiran Lainnya</option></select></div><div class="col-md-2"><button type="button" class="btn btn-outline-danger btn-sm w-100 btn-del-attach">Hapus</button></div></div>`;
+    attachmentCount++;
+    const c=document.getElementById('attachmentListContainer'); if(!c)return;
+    const d=document.createElement('div'); d.className='card p-3 mb-3';
+    d.innerHTML=`<div class="row g-3 align-items-center"><div class="col-md-5"><label class="form-label fw-bold small">File #${attachmentCount}</label><input type="file" class="form-control file-input-item" accept="image/*,application/pdf"></div><div class="col-md-5"><label class="form-label fw-bold small">Tipe</label><select class="form-select file-type-item"><option value="Foto Kejadian Awal">Foto Kejadian Awal</option><option value="Foto Kerusakan Unit">Foto Kerusakan Unit</option><option value="Foto Sketsa / Peta">Foto Sketsa / Peta</option><option value="Dokumen BAP / Kronologis">Dokumen BAP / Kronologis</option><option value="Lampiran Lainnya">Lampiran Lainnya</option></select></div><div class="col-md-2"><button type="button" class="btn btn-outline-danger btn-sm w-100 btn-del-attach">Hapus</button></div></div>`;
     c.appendChild(d); d.querySelector('.btn-del-attach').onclick=()=>d.remove();
+  }
+  function fileToBase64(file){
+    return new Promise((resolve,reject)=>{const reader=new FileReader();reader.onload=()=>{const raw=reader.result;resolve(raw.includes(',')?raw.split(',')[1]:raw)};reader.onerror=reject;reader.readAsDataURL(file);});
+  }
+  function collectFormData(){
+    const karyawanList=[];
+    document.querySelectorAll('#employeeListContainer .emp-card').forEach(card=>{
+      karyawanList.push({
+        perusahaan:card.querySelector('.emp-perusahaan')?.value||'',
+        departemen:card.querySelector('.emp-departemen')?.value||'',
+        klasifikasi:card.querySelector('.emp-klasifikasi')?.value||'',
+        karyawan:card.querySelector('.emp-karyawan')?.value||'',
+        jabatan:card.querySelector('.emp-jabatan')?.value||'',
+        umur:card.querySelector('.emp-umur')?.value||'',
+        masaKerja:card.querySelector('.emp-masaKerja')?.value||''
+      });
+    });
+    return {
+      site:document.getElementById('in_site').value,
+      tglKejadian:document.getElementById('in_tgl').value,
+      hari:document.getElementById('in_hari').value,
+      bulan:document.getElementById('in_bulan').value,
+      jamKejadian:document.getElementById('in_jam').value,
+      shift:document.getElementById('in_shift').value,
+      lokasi:document.getElementById('in_lokasi').value,
+      kronologis:document.getElementById('in_kronologis').value,
+      alatTerlibat:document.getElementById('in_alatTerlibat').value,
+      jenisAlat:document.getElementById('in_jenisAlat').value,
+      lossCost:document.getElementById('in_lossCost').value,
+      jenisKontak:document.getElementById('in_jenisKontak').value,
+      sumberKecelakaan:document.getElementById('in_sumberKecelakaan').value,
+      tta:document.getElementById('in_tta').value,
+      ketTta:document.getElementById('in_ketTta').value,
+      kta:document.getElementById('in_kta').value,
+      ketKta:document.getElementById('in_ketKta').value,
+      faktorManusia:document.getElementById('in_faktorManusia').value,
+      ketManusia:document.getElementById('in_ketManusia').value,
+      faktorPekerjaan:document.getElementById('in_faktorPekerjaan').value,
+      ketPekerjaan:document.getElementById('in_ketPekerjaan').value,
+      kurangKendali:document.getElementById('in_kurangKendali').value,
+      ketKendali:document.getElementById('in_ketKendali').value,
+      tindakanPerbaikan:document.getElementById('in_tindakanPerbaikan').value,
+      tindakanPencegahan:document.getElementById('in_tindakanPencegahan').value,
+      dueDate:document.getElementById('in_dueDate').value,
+      karyawanList:karyawanList
+    };
+  }
+  async function submitIncident(e){
+    e.preventDefault();
+    const btn=document.getElementById('btnSubmit');
+    const cards=document.querySelectorAll('#employeeListContainer .emp-card');
+    if(cards.length===0){alert('Tambahkan minimal 1 karyawan terlibat.');return;}
+    if(!document.getElementById('formIncident').checkValidity()){document.getElementById('formIncident').reportValidity();return;}
+    btn.disabled=true; btn.innerHTML='<span class="spinner-border spinner-border-sm me-2"></span>Menyimpan Laporan...';
+    const formData=collectFormData();
+    console.log('KARYAWAN YANG DIKIRIM:',formData.karyawanList);
+    google.script.run.withSuccessHandler(async function(res){
+      if(!res||!res.success){alert('Gagal menyimpan laporan: '+(res?.message||'Error'));btn.disabled=false;btn.innerHTML='<i class="bi bi-send-check me-2"></i>Kirim Laporan Insiden';return;}
+      const rows=[...document.querySelectorAll('#attachmentListContainer .card')];
+      let uploaded=0, failed=0;
+      for(const row of rows){
+        const input=row.querySelector('.file-input-item');
+        const type=row.querySelector('.file-type-item')?.value||'Foto Kejadian Awal';
+        if(!input?.files?.[0]) continue;
+        try{
+          btn.innerHTML='<span class="spinner-border spinner-border-sm me-2"></span>Mengunggah Lampiran...';
+          const file=input.files[0], b64=await fileToBase64(file);
+          const up=await new Promise((resolve,reject)=>google.script.run.withSuccessHandler(resolve).withFailureHandler(reject).uploadAttachment(TOKEN,res.noInsiden,{fileName:file.name,mimeType:file.type,bytes:b64},type));
+          if(up?.success)uploaded++;else failed++;
+        }catch(err){failed++;}
+      }
+      alert('Laporan berhasil disimpan. Nomor Insiden: '+res.noInsiden+(failed?'\nLampiran gagal: '+failed:''));
+      window.top.location.href=SCRIPT_URL+'?token='+TOKEN+'&page=IncidentList';
+    }).withFailureHandler(function(err){alert('Error Server: '+(err?.message||err));btn.disabled=false;btn.innerHTML='<i class="bi bi-send-check me-2"></i>Kirim Laporan Insiden';}).saveIncidentReport(TOKEN,formData);
   }
 
   document.addEventListener('DOMContentLoaded',function(){
-    document.getElementById('btnAddEmp').onclick=createEmployeeRow; document.getElementById('btnAddAttach').onclick=createAttachmentRow; createAttachmentRow();
-    document.getElementById('in_tgl').onchange=function(){if(!this.value)return;const x=new Date(this.value),days=['Minggu','Senin','Selasa','Rabu','Kamis','Jumat','Sabtu'],months=['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];document.getElementById('in_hari').value=days[x.getDay()];document.getElementById('in_bulan').value=months[x.getMonth()];};
-
+    const addEmp=document.getElementById('btnAddEmp');
+    const addAttach=document.getElementById('btnAddAttach');
+    if(addEmp) addEmp.addEventListener('click',createEmployeeRow);
+    if(addAttach) addAttach.addEventListener('click',createAttachmentRow);
+    const form=document.getElementById('formIncident');
+    if(form) form.addEventListener('submit',submitIncident);
+    createAttachmentRow();
+    document.getElementById('in_tgl').addEventListener('change',function(){if(!this.value)return;const x=new Date(this.value),days=['Minggu','Senin','Selasa','Rabu','Kamis','Jumat','Sabtu'],months=['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];document.getElementById('in_hari').value=days[x.getDay()];document.getElementById('in_bulan').value=months[x.getMonth()];});
     google.script.run.withSuccessHandler(function(res){
       console.log('MASTER DATA RESPONSE:',res);
       if(res&&res.success&&res.master){
         masterCache=res.master; populateAll(); createEmployeeRow();
         const status=document.getElementById('masterDataStatus'); status.className='alert alert-success'; status.innerHTML='<i class="bi bi-check-circle-fill"></i><span>Master Data berhasil dimuat.</span>';
       }else{
-        const msg=res&&res.message?res.message:'Response Master Data kosong';
-        const status=document.getElementById('masterDataStatus'); status.className='alert alert-danger'; status.innerHTML='<i class="bi bi-exclamation-triangle-fill"></i><span>'+msg+'</span>';
-        console.error('MASTER DATA ERROR:',msg);
+        const msg=res?.message||'Response Master Data kosong'; const status=document.getElementById('masterDataStatus'); status.className='alert alert-danger'; status.innerHTML='<i class="bi bi-exclamation-triangle-fill"></i><span>'+msg+'</span>'; console.error('MASTER DATA ERROR:',msg);
       }
-    }).withFailureHandler(function(err){
-      const msg=err&&err.message?err.message:String(err); const status=document.getElementById('masterDataStatus'); status.className='alert alert-danger'; status.innerHTML='<i class="bi bi-exclamation-triangle-fill"></i><span>Gagal memuat Master Data: '+msg+'</span>'; console.error('MASTER DATA FAILURE:',err);
-    }).getFormMasterData(TOKEN);
+    }).withFailureHandler(function(err){const msg=err?.message||String(err);const status=document.getElementById('masterDataStatus');status.className='alert alert-danger';status.innerHTML='<i class="bi bi-exclamation-triangle-fill"></i><span>Gagal memuat Master Data: '+msg+'</span>';console.error('MASTER DATA FAILURE:',err);}).getFormMasterData(TOKEN);
   });
 })();
 </script>
