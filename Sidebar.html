@@ -1,0 +1,149 @@
+<!-- Sidebar.html -->
+<style>
+  :root {
+    --red-sinarmas: #e31e24;
+    --red-dark-sidebar: #b81419;
+  }
+
+  /* SIDEBAR MODE NORMAL (260px) */
+  #appSidebar {
+    width: 260px !important;
+    min-width: 260px !important;
+    position: fixed !important;
+    top: 0; bottom: 0; left: 0;
+    background: linear-gradient(180deg, var(--red-sinarmas) 0%, var(--red-dark-sidebar) 100%) !important;
+    color: #ffffff !important;
+    padding: 20px 12px !important;
+    z-index: 1050 !important;
+    transition: width 0.3s ease, min-width 0.3s ease, transform 0.3s ease !important;
+    box-shadow: 4px 0 15px rgba(0, 0, 0, 0.15) !important;
+    overflow-x: hidden !important;
+    display: flex !important;
+    flex-direction: column !important;
+  }
+
+  /* SIDEBAR MODE MINI (70px) */
+  #appSidebar.mini-sidebar {
+    width: 70px !important;
+    min-width: 70px !important;
+  }
+
+  #appSidebar.mini-sidebar .hide-on-mini { display: none !important; }
+  #appSidebar.mini-sidebar .brand-box { justify-content: center !important; padding-bottom: 12px !important; }
+  #appSidebar.mini-sidebar .nav-btn { justify-content: center !important; padding: 12px 0 !important; }
+  #appSidebar.mini-sidebar .nav-btn i { font-size: 22px !important; margin: 0 !important; }
+
+  /* Brand Header */
+  .brand-box {
+    padding-bottom: 16px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+    margin-bottom: 20px;
+  }
+  .brand-title { font-size: 18px; font-weight: 800; color: #ffffff; white-space: nowrap; }
+
+  /* Navigasi */
+  .nav-btn {
+    display: flex; align-items: center; gap: 14px; width: 100%;
+    padding: 12px 16px; color: rgba(255, 255, 255, 0.85) !important;
+    background: transparent; border: none; text-decoration: none !important;
+    border-radius: 8px; margin-bottom: 6px; font-weight: 600; font-size: 14px;
+    transition: background 0.2s ease; white-space: nowrap;
+  }
+  .nav-btn:hover { background: rgba(255, 255, 255, 0.15); color: #ffffff !important; }
+  .nav-btn.active {
+    background: #ffffff !important; color: var(--red-sinarmas) !important;
+    font-weight: 700; box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+  }
+  .nav-btn.active i { color: var(--red-sinarmas) !important; }
+
+  @media (max-width: 991px) {
+    #appSidebar { transform: translateX(-100%); }
+    #appSidebar.show-mobile { transform: translateX(0); width: 260px !important; }
+  }
+</style>
+
+<!-- AMBIL VARIABEL DENGAN SAFE CHECK -->
+<?
+  var _url = (typeof scriptUrl !== 'undefined') ? scriptUrl : '';
+  var _token = (typeof token !== 'undefined') ? token : '';
+  var _page = (typeof page !== 'undefined') ? page : '';
+  var _role = (typeof userRole !== 'undefined') ? userRole : '';
+  var _name = (typeof userName !== 'undefined') ? userName : 'User';
+  var _site = (typeof userSite !== 'undefined') ? userSite : '-';
+?>
+
+<aside id="appSidebar">
+  <!-- Brand Header & Tombol X Mobile -->
+  <div class="brand-box d-flex justify-content-between align-items-center">
+    <div>
+      <div class="brand-title">HSE <span class="hide-on-mini">MONITORING</span></div>
+      <small class="hide-on-mini text-white-50 fw-bold" style="font-size: 10.5px;">Batubara Incident System</small>
+    </div>
+    <!-- Tombol Close (X) Khusus Layar Mobile -->
+    <button type="button" class="btn btn-sm text-white d-lg-none p-0 border-0" onclick="toggleSidebar()" title="Tutup Menu">
+      <i class="bi bi-x-lg fs-4"></i>
+    </button>
+  </div>
+
+  <!-- Menu Navigasi Utama -->
+  <div class="nav-menu flex-grow-1">
+    <a href="<?= _url ?>?token=<?= _token ?>&page=Dashboard" class="nav-btn <?= (_page === 'Dashboard') ? 'active' : '' ?>" title="Dashboard">
+      <i class="bi bi-grid-fill"></i>
+      <span class="hide-on-mini">Dashboard</span>
+    </a>
+
+    <a href="<?= _url ?>?token=<?= _token ?>&page=IncidentList" class="nav-btn <?= (_page === 'IncidentList') ? 'active' : '' ?>" title="Data Laporan">
+      <i class="bi bi-file-earmark-text-fill"></i>
+      <span class="hide-on-mini">Data Laporan</span>
+    </a>
+
+    <a href="<?= _url ?>?token=<?= _token ?>&page=IncidentInput" class="nav-btn <?= (_page === 'IncidentInput') ? 'active' : '' ?>" title="Input Insiden">
+      <i class="bi bi-plus-circle-fill"></i>
+      <span class="hide-on-mini">Input Insiden</span>
+    </a>
+
+    <? if (String(_role).toLowerCase() === 'admin') { ?>
+    <a href="<?= _url ?>?token=<?= _token ?>&page=MasterData" class="nav-btn <?= (_page === 'MasterData') ? 'active' : '' ?>" title="Master Data">
+      <i class="bi bi-database-fill-gear"></i>
+      <span class="hide-on-mini">Master Data</span>
+    </a>
+    <? } ?>
+  </div>
+
+  <!-- Profile & Logout -->
+  <div class="pt-3 border-top border-white-20">
+    <div class="hide-on-mini mb-2">
+      <div class="fw-bold text-white" style="font-size: 13.5px;"><?= _name ?></div>
+      <small class="text-white-50 d-block" style="font-size: 11px;">Site: <strong><?= _site ?></strong> | Role: <strong><?= _role ?></strong></small>
+    </div>
+    
+    <button onclick="logout()" class="btn btn-sm btn-light text-danger w-100 fw-bold shadow-sm d-flex align-items-center justify-content-center gap-2" title="Keluar / Logout">
+      <i class="bi bi-box-arrow-right fs-6"></i>
+      <span class="hide-on-mini">Keluar / Logout</span>
+    </button>
+  </div>
+</aside>
+
+<script>
+  function toggleSidebar() {
+    const sidebar = document.getElementById('appSidebar');
+    const mainContent = document.getElementById('mainContent');
+
+    if (!sidebar) return;
+
+    if (window.innerWidth < 992) {
+      sidebar.classList.toggle('show-mobile');
+    } else {
+      sidebar.classList.toggle('mini-sidebar');
+      if (mainContent) {
+        mainContent.classList.toggle('mini-content');
+      }
+    }
+  }
+
+  function logout() {
+    google.script.run.withSuccessHandler(() => {
+      window.top.location.href = "<?= _url ?>";
+    }).logoutSession("<?= _token ?>");
+  }
+</script>

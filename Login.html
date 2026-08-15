@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <base target="_top">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Login - Monitoring Investigasi K3</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, sans-serif;
+      min-height: 100vh; background-color: #0d0d0d; color: #ffffff;
+      display: flex; overflow-x: hidden;
+    }
+    .container { display: flex; width: 100vw; min-height: 100vh; position: relative; }
+    .left-panel {
+      width: 480px; min-width: 480px;
+      background: linear-gradient(145deg, #180303 0%, #0d0000 40%, #050505 100%);
+      padding: 60px 48px; display: flex; flex-direction: column; justify-content: center; z-index: 2;
+    }
+    .welcome-label { color: #e31e24; font-size: 14px; font-weight: 600; margin-bottom: 6px; }
+    .title-group { margin-bottom: 24px; }
+    .title-main { font-size: 34px; font-weight: 800; line-height: 1.15; color: #ffffff; }
+    .title-highlight { font-size: 34px; font-weight: 800; color: #e31e24; display: block; }
+    .login-card {
+      background: rgba(22, 22, 22, 0.7); border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 16px; padding: 28px 24px; backdrop-filter: blur(10px);
+    }
+    label { font-size: 13px; color: #ccc; display: block; margin-bottom: 8px; font-weight: 500; }
+    .field { margin-bottom: 18px; }
+    .input-wrap { position: relative; display: flex; align-items: center; }
+    .input-icon { position: absolute; left: 14px; color: #e31e24; font-size: 14px; }
+    .input-wrap input {
+      width: 100%; background: rgba(10, 10, 10, 0.6); border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: 8px; padding: 12px 14px 12px 40px; color: white; font-size: 13.5px; outline: none;
+    }
+    .input-wrap input:focus { border-color: #e31e24; background: rgba(0, 0, 0, 0.8); }
+    .toggle-pw { position: absolute; right: 14px; cursor: pointer; color: #666; font-size: 14px; }
+    .row-between { display: flex; justify-content: space-between; align-items: center; margin-bottom: 22px; font-size: 12.5px; }
+    .remember { display: flex; align-items: center; gap: 8px; color: #aaa; cursor: pointer; }
+    .remember input { accent-color: #e31e24; }
+    .forgot { color: #e31e24; text-decoration: none; font-weight: 500; }
+    .submit-btn {
+      width: 100%; background: #b81419; color: white; border: none; border-radius: 8px;
+      padding: 13px; font-size: 14px; font-weight: 700; cursor: pointer;
+      display: flex; align-items: center; justify-content: center; gap: 10px;
+    }
+    .submit-btn:hover { background: #d4181f; }
+    .submit-btn:disabled { background: #5a181a; cursor: not-allowed; }
+    .error-msg {
+      background: rgba(227, 30, 36, 0.15); border: 1px solid rgba(227, 30, 36, 0.4);
+      color: #ff8a8a; padding: 10px 14px; border-radius: 8px; font-size: 12.5px; margin-bottom: 16px; display: none;
+    }
+    .footer { margin-top: auto; padding-top: 32px; font-size: 11px; color: #555; }
+    .right-panel {
+      flex: 1; position: relative;
+      background: url('https://lh3.googleusercontent.com/d/1CnScTJ7p-KT9neKTHNgHYEJsKmZhlNcu') center/cover no-repeat;
+      clip-path: polygon(8% 0, 100% 0, 100% 100%, 0% 100%); margin-left: -50px;
+    }
+    .right-panel::before {
+      content: ''; position: absolute; inset: 0;
+      background: linear-gradient(180deg, rgba(15, 5, 5, 0.3) 0%, rgba(10, 10, 10, 0.85) 100%);
+    }
+    @media (max-width: 960px) {
+      .container { flex-direction: column; }
+      .left-panel { width: 100%; min-width: 0; padding: 40px 24px; }
+      .right-panel { display: none; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="left-panel">
+      <div class="welcome-label">Selamat datang di</div>
+      <div class="title-group">
+        <div class="title-main">Investigasi</div>
+        <div class="title-main">Pertambangan</div>
+        <span class="title-highlight">Batubara</span>
+      </div>
+
+      <div id="errorMsg" class="error-msg"></div>
+
+      <div class="login-card">
+        <form id="loginForm" onsubmit="return handleLogin(event)">
+          <div class="field">
+            <label>Username</label>
+            <div class="input-wrap">
+              <span class="input-icon">👤</span>
+              <input type="text" id="username" placeholder="Masukkan username" required>
+            </div>
+          </div>
+
+          <div class="field">
+            <label>Password</label>
+            <div class="input-wrap">
+              <span class="input-icon">🔒</span>
+              <input type="password" id="password" placeholder="Masukkan password" required>
+              <span class="toggle-pw" onclick="togglePassword()">👁</span>
+            </div>
+          </div>
+
+          <div class="row-between">
+            <label class="remember">
+              <input type="checkbox" id="rememberMe"> Ingat saya
+            </label>
+            <a class="forgot" href="#" onclick="alert('Hubungi admin HSE untuk reset password.'); return false;">Lupa password?</a>
+          </div>
+
+          <button type="submit" id="submitBtn" class="submit-btn">
+            Masuk <span>→</span>
+          </button>
+        </form>
+      </div>
+
+      <div class="footer">© 2026 Sinarmas Mining. All rights reserved.</div>
+    </div>
+    <div class="right-panel"></div>
+  </div>
+
+  <script>
+    function togglePassword() {
+      const pw = document.getElementById('password');
+      pw.type = pw.type === 'password' ? 'text' : 'password';
+    }
+
+    function handleLogin(e) {
+      e.preventDefault();
+      const username = document.getElementById('username').value.trim();
+      const password = document.getElementById('password').value;
+      const rememberMe = document.getElementById('rememberMe').checked;
+      const btn = document.getElementById('submitBtn');
+      const errBox = document.getElementById('errorMsg');
+
+      errBox.style.display = 'none';
+      btn.disabled = true;
+      btn.innerHTML = 'Memproses...';
+
+      google.script.run
+        .withSuccessHandler(function(res) {
+          if (res.success) {
+            window.top.location.href = '<?= scriptUrl ?>?token=' + res.token + '&page=Dashboard';
+          } else {
+            errBox.textContent = res.message;
+            errBox.style.display = 'block';
+            btn.disabled = false;
+            btn.innerHTML = 'Masuk <span>→</span>';
+          }
+        })
+        .withFailureHandler(function(err) {
+          errBox.textContent = 'Terjadi kesalahan: ' + err.message;
+          errBox.style.display = 'block';
+          btn.disabled = false;
+          btn.innerHTML = 'Masuk <span>→</span>';
+        })
+        .attemptLogin(username, password, rememberMe);
+
+      return false;
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <base target="_top">
+  <meta charset="utf-8">
+  <title>Data Laporan - HSE Portal Sinarmas</title>
+  
+  <!-- CDN Bootstrap & Icons -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+
+  <style>
+    body { 
+      background-color: #ffffff !important; 
+      color: #1a1a1a; 
+      font-family: 'Segoe UI', sans-serif;
+      overflow-x: hidden;
+      margin: 0; padding: 0;
+    }
+    
+    /* Area Konten Utama */
+    .main-content {
+      margin-left: 260px !important;
+      padding: 30px 40px;
+      transition: margin-left 0.3s ease !important;
+      background-color: #ffffff !important;
+      min-height: 100vh;
+    }
+    .main-content.mini-content { margin-left: 70px !important; }
+
+    /* Card & Filter */
+    .glass-card {
+      background: #ffffff;
+      border: 1px solid #e2e8f0;
+      border-radius: 12px;
+      padding: 24px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.03);
+      margin-bottom: 24px;
+    }
+
+    /* Table Custom Sinarmas */
+    .table-sinarmas { width: 100%; border-collapse: separate; border-spacing: 0; }
+    .table-sinarmas th { background: #e31e24; color: #ffffff; padding: 12px 16px; font-size: 13px; font-weight: 700; border: none; }
+    .table-sinarmas td { padding: 12px 16px; border-bottom: 1px solid #e2e8f0; font-size: 13px; vertical-align: middle; background-color: #ffffff; }
+    .table-sinarmas tbody tr:hover td { background-color: #fff0f1; }
+
+    /* Buttons */
+    .btn-sinarmas { background: #e31e24; color: #fff; font-weight: 600; border: none; padding: 10px 20px; border-radius: 8px; text-decoration: none; }
+    .btn-sinarmas:hover { background: #b81419; color: #fff; }
+
+    .form-control-search, .form-select-filter {
+      border: 1px solid #cbd5e1;
+      border-radius: 8px;
+      padding: 8px 14px;
+      font-size: 13.5px;
+    }
+
+    @media (max-width: 991px) { .main-content { margin-left: 0 !important; padding: 20px; } }
+  </style>
+</head>
+<body>
+
+  <!-- 🔴 PANGGIL COMPONENT SIDEBAR DENGAN DATA VARIABEL EKSPLISIT -->
+  <?!= include('Sidebar', {
+    scriptUrl: scriptUrl,
+    token: token,
+    page: 'IncidentList',
+    userName: userName,
+    userSite: userSite,
+    userRole: userRole
+  }); ?>
+
+  <!-- AREA KONTEN UTAMA -->
+  <div class="main-content" id="mainContent">
+    
+    <!-- Top Header Bar -->
+    <div class="d-flex justify-content-between align-items-center mb-4 pb-3 border-bottom">
+      <div class="d-flex align-items-center gap-3">
+        <!-- Tombol Strip 3 Toggle Mini Sidebar -->
+        <button type="button" class="btn btn-outline-danger border-0 p-2 fs-4" onclick="toggleSidebar()" title="Perkecil/Perbesar Sidebar">
+          <i class="bi bi-list"></i>
+        </button>
+        <div>
+          <h3 class="fw-bold mb-0 text-dark">Data Laporan Insiden</h3>
+          <small class="text-muted">Menampilkan seluruh daftar laporan untuk Site: <strong><?= userSite ?></strong></small>
+        </div>
+      </div>
+
+      <div class="d-flex gap-2">
+        <a href="<?= scriptUrl ?>?token=<?= token ?>&page=IncidentInput" class="btn btn-sinarmas">
+          + Buat Laporan Baru
+        </a>
+      </div>
+    </div>
+
+    <!-- SEARCH & FILTER BAR -->
+    <div class="glass-card mb-4">
+      <div class="row g-3">
+        <div class="col-md-8">
+          <label class="form-label fw-bold text-secondary" style="font-size: 12px;">PENCARIAN CEPAT</label>
+          <div class="input-group">
+            <span class="input-group-text bg-white"><i class="bi bi-search text-muted"></i></span>
+            <input type="text" id="searchInput" class="form-control form-control-search" placeholder="Cari No Insiden, Perusahaan, atau Kronologis..." onkeyup="filterData()">
+          </div>
+        </div>
+        <div class="col-md-4">
+          <label class="form-label fw-bold text-secondary" style="font-size: 12px;">FILTER STATUS</label>
+          <select id="filterStatus" class="form-select form-select-filter" onchange="filterData()">
+            <option value="">-- Semua Status --</option>
+            <option value="Open">Open</option>
+            <option value="In Progress">In Progress</option>
+            <option value="Closed">Closed</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <!-- TABEL DATA LAPORAN -->
+    <div class="glass-card">
+      <div class="table-responsive">
+        <table class="table-sinarmas">
+          <thead>
+            <tr>
+              <th>No Insiden</th>
+              <th>Tanggal</th>
+              <th>Site</th>
+              <th>Perusahaan</th>
+              <th>Klasifikasi</th>
+              <th>Status</th>
+              <th class="text-center" style="width: 220px;">Aksi</th>
+            </tr>
+          </thead>
+          <tbody id="listTableBody">
+            <tr><td colspan="7" class="text-center py-4 text-muted">Memuat data laporan insiden...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- JAVASCRIPT LOGIC -->
+  <script>
+    const TOKEN = "<?= token ?>";
+    const SCRIPT_URL = "<?= scriptUrl ?>";
+    let ALL_DATA = [];
+
+    window.addEventListener('DOMContentLoaded', () => {
+      google.script.run
+        .withSuccessHandler(renderListTable)
+        .withFailureHandler(err => alert("Gagal memuat data: " + err.message))
+        .getFilteredIncidents(TOKEN);
+    });
+
+    function renderListTable(res) {
+      if (!res.success) {
+        alert(res.message);
+        return;
+      }
+
+      ALL_DATA = res.rows;
+      displayRows(ALL_DATA);
+    }
+
+    function displayRows(rows) {
+      const tbody = document.getElementById("listTableBody");
+      tbody.innerHTML = "";
+
+      if (!rows || rows.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="7" class="text-center py-4 text-muted">Data laporan tidak ditemukan.</td></tr>`;
+        return;
+      }
+
+      rows.forEach(r => {
+        const id = r[1] || '-';
+        const tgl = r[3] ? new Date(r[3]).toLocaleDateString('id-ID') : '-';
+        const site = r[10] || '-';
+        const pt = r[11] || '-';
+        const klasifikasi = r[13] || '-';
+        const st = r[37] || 'Open';
+
+        let badgeStyle = 'bg-danger';
+        if (st === 'In Progress') badgeStyle = 'bg-warning text-dark';
+        if (st === 'Closed') badgeStyle = 'bg-success';
+
+        tbody.innerHTML += `
+          <tr>
+            <td class="fw-bold text-danger">${id}</td>
+            <td>${tgl}</td>
+            <td>${site}</td>
+            <td>${pt}</td>
+            <td>${klasifikasi}</td>
+            <td><span class="badge ${badgeStyle}">${st}</span></td>
+            <td class="text-center">
+              <div class="btn-group btn-group-sm" role="group">
+                <a href="${SCRIPT_URL}?token=${TOKEN}&page=IncidentDetail&id=${id}" class="btn btn-outline-primary" title="Lihat Detail & Media">
+                  <i class="bi bi-eye"></i> Detail
+                </a>
+                <a href="${SCRIPT_URL}?token=${TOKEN}&page=IncidentEdit&id=${id}" class="btn btn-outline-warning" title="Edit Data Laporan">
+                  <i class="bi bi-pencil"></i> Edit
+                </a>
+                <a href="${SCRIPT_URL}?token=${TOKEN}&page=IncidentClose&id=${id}" class="btn btn-outline-success" title="Update Status CAPA / Closing">
+                  <i class="bi bi-check-circle"></i> Status
+                </a>
+              </div>
+            </td>
+          </tr>
+        `;
+      });
+    }
+
+    function filterData() {
+      const search = document.getElementById("searchInput").value.toLowerCase();
+      const statusFilter = document.getElementById("filterStatus").value;
+
+      const filtered = ALL_DATA.filter(r => {
+        const textMatch = String(r[1]).toLowerCase().includes(search) || 
+                          String(r[11]).toLowerCase().includes(search) || 
+                          String(r[9]).toLowerCase().includes(search);
+        const statusMatch = statusFilter === "" || String(r[37]) === statusFilter;
+        return textMatch && statusMatch;
+      });
+
+      displayRows(filtered);
+    }
+  </script>
+</body>
+</html>
