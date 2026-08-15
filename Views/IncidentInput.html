@@ -27,10 +27,6 @@
       min-height: 100vh;
     }
 
-    .main-content.mini-content {
-      margin-left: 70px !important;
-    }
-
     .glass-card {
       background: #ffffff;
       border: 1px solid #e2e8f0;
@@ -56,7 +52,6 @@
       border: none;
       padding: 12px 28px;
       border-radius: 8px;
-      text-decoration: none;
     }
 
     .btn-sinarmas:hover {
@@ -64,16 +59,14 @@
       color: #fff;
     }
 
-    .form-control,
-    .form-select {
+    .form-control, .form-select {
       border-radius: 8px;
       border: 1px solid #cbd5e1;
       padding: 10px 14px;
       font-size: 13.5px;
     }
 
-    .form-control:focus,
-    .form-select:focus {
+    .form-control:focus, .form-select:focus {
       border-color: #e31e24;
       box-shadow: 0 0 0 0.2rem rgba(227, 30, 36, 0.15);
     }
@@ -89,8 +82,8 @@
 
 <body>
 
-  <!-- Panggil Component Sidebar -->
-  <?!= include('Sidebar', {
+  <!-- Component Sidebar -->
+  <?!= include('Views/Sidebar', {
     scriptUrl: scriptUrl,
     token: token,
     page: 'IncidentInput',
@@ -99,13 +92,12 @@
     userRole: userRole
   }); ?>
 
-  <!-- Area Konten Utama -->
+  <!-- Area Utama -->
   <div class="main-content" id="mainContent">
 
-    <!-- Top Header Bar -->
     <div class="d-flex justify-content-between align-items-center mb-4 pb-3 border-bottom">
       <div class="d-flex align-items-center gap-3">
-        <button type="button" class="btn btn-outline-danger border-0 p-2 fs-4" onclick="toggleSidebar()" title="Hide/Show Sidebar">
+        <button type="button" class="btn btn-outline-danger border-0 p-2 fs-4" onclick="toggleSidebar()" title="Toggle Menu">
           <i class="bi bi-list"></i>
         </button>
         <div>
@@ -115,11 +107,10 @@
       </div>
     </div>
 
-    <!-- Form Input Laporan Insiden -->
     <form id="formIncident">
       <div class="glass-card">
 
-        <!-- SECTION 1: INFORMASI UTAMA & WAKTU -->
+        <!-- SECTION 1 -->
         <div class="section-title"><i class="bi bi-clock-history me-2"></i>1. Informasi Utama & Waktu Kejadian</div>
         <div class="row g-3 mb-4">
           <div class="col-md-4">
@@ -160,16 +151,16 @@
           </div>
         </div>
 
-        <!-- SECTION 2: PERUSAHAAN & KARYAWAN DINAMIS (+) -->
+        <!-- SECTION 2 -->
         <div class="section-title d-flex justify-content-between align-items-center">
           <span><i class="bi bi-person-badge me-2"></i>2. Entitas Perusahaan & Karyawan Terlibat</span>
-          <button type="button" id="btnAddEmployee" class="btn btn-sm btn-outline-danger fw-bold">
+          <button type="button" id="btnAddEmp" class="btn btn-sm btn-outline-danger fw-bold">
             <i class="bi bi-person-plus me-1"></i> Tambah Karyawan (+ )
           </button>
         </div>
         <div id="employeeListContainer" class="mb-4"></div>
 
-        <!-- SECTION 3: KRONOLOGIS & ALAT -->
+        <!-- SECTION 3 -->
         <div class="section-title"><i class="bi bi-journal-text me-2"></i>3. Kronologis & Peralatan Terlibat</div>
         <div class="row g-3 mb-4">
           <div class="col-12">
@@ -198,7 +189,7 @@
           </div>
         </div>
 
-        <!-- SECTION 4: ANALISIS & AKAR MASALAH (TTA & KTA) -->
+        <!-- SECTION 4 -->
         <div class="section-title"><i class="bi bi-search me-2"></i>4. Analisis Penyebab (TTA, KTA, & Faktor Risiko)</div>
         <div class="row g-3 mb-4">
           <div class="col-md-6">
@@ -243,7 +234,7 @@
           </div>
         </div>
 
-        <!-- SECTION 5: TINDAKAN & PERENCANAAN CAPA -->
+        <!-- SECTION 5 -->
         <div class="section-title"><i class="bi bi-shield-check me-2"></i>5. Tindakan Perbaikan, Pencegahan, & Target Due Date</div>
         <div class="row g-3 mb-4">
           <div class="col-md-6">
@@ -260,10 +251,10 @@
           </div>
         </div>
 
-        <!-- SECTION 6: UPLOAD LAMPIRAN MEDIA INTERAKTIF (+) -->
+        <!-- SECTION 6 -->
         <div class="section-title d-flex justify-content-between align-items-center">
           <span><i class="bi bi-images me-2"></i>6. Upload Foto / Lampiran Media Awal</span>
-          <button type="button" id="btnAddAttachment" class="btn btn-sm btn-outline-danger fw-bold">
+          <button type="button" id="btnAddAttach" class="btn btn-sm btn-outline-danger fw-bold">
             <i class="bi bi-plus-circle me-1"></i> Tambah Lampiran (+ )
           </button>
         </div>
@@ -290,7 +281,7 @@
 
   </div>
 
-  <!-- MODAL POPUP DIALOG AUTO-REDIRECT STYLISH -->
+  <!-- MODAL DIALOG -->
   <div class="modal fade" id="successModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
     <div class="modal-dialog modal-dialog-centered">
       <div class="modal-content border-0 shadow-lg rounded-4 overflow-hidden">
@@ -330,427 +321,415 @@
     </div>
   </div>
 
-  <!-- JS BOOTSTRAP -->
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
-  <!-- LOGIC JAVASCRIPT MANDIRI TANPA DEKLARASI GLOBAL SENSITIF -->
-  <script>
-    (function() {
-      const TOKEN = "<?= token ?>";
-      const USER_ROLE = "<?= userRole ?>";
-      const SCRIPT_URL = "<?= scriptUrl ?>";
+<script>
+  (function() {
+    const TOKEN = "<?= token ?>";
+    const USER_ROLE = "<?= userRole ?>";
+    const SCRIPT_URL = "<?= scriptUrl ?>";
 
-      let attachmentCount = 0;
-      let employeeCount = 0;
-      let masterCache = null;
-      let redirectUrl = SCRIPT_URL + "?token=" + TOKEN + "&page=IncidentList";
-      let countdownTimer = null;
+    let attachmentCount = 0;
+    let employeeCount = 0;
+    let masterCache = null; // Murni dikosongkan, menunggu data dari Database Sheet Master
+    let redirectUrl = SCRIPT_URL + "?token=" + TOKEN + "&page=IncidentList";
+    let countdownTimer = null;
 
-      // Helper Isi Select Options
-      function fillSelectOptions(selectElement, arrayItems) {
-        if (!selectElement) return;
-        selectElement.innerHTML = '<option value="">-- Pilih --</option>';
-        if (Array.isArray(arrayItems)) {
-          arrayItems.forEach(item => {
-            if (item !== "" && item !== null && item !== undefined) {
-              const opt = document.createElement("option");
-              opt.value = item;
-              opt.textContent = item;
-              selectElement.appendChild(opt);
-            }
-          });
-        }
-      }
-
-      function fillById(id, items) {
-        const el = document.getElementById(id);
-        if (el) fillSelectOptions(el, items);
-      }
-
-      // Fungsi Tambah Baris Karyawan
-      function createEmployeeRow() {
-        employeeCount++;
-        const container = document.getElementById('employeeListContainer');
-        if (!container) return;
-
-        const rowId = `empRow_${employeeCount}`;
-        const div = document.createElement('div');
-        div.className = 'card p-3 mb-3 border border-light-subtle shadow-sm rounded-3 emp-card';
-        div.id = rowId;
-
-        div.innerHTML = `
-          <div class="d-flex justify-content-between align-items-center mb-2 pb-2 border-bottom">
-            <span class="fw-bold text-danger small"><i class="bi bi-person me-1"></i> Karyawan Terlibat #${employeeCount}</span>
-            ${employeeCount > 1 ? `
-              <button type="button" class="btn btn-outline-danger btn-sm py-0 px-2 fw-bold btn-del-emp">
-                <i class="bi bi-trash me-1"></i> Hapus
-              </button>
-            ` : ''}
-          </div>
-          <div class="row g-3">
-            <div class="col-md-4">
-              <label class="form-label fw-bold small">Perusahaan *</label>
-              <select class="form-select emp-perusahaan" required></select>
-            </div>
-            <div class="col-md-4">
-              <label class="form-label fw-bold small">Departemen *</label>
-              <select class="form-select emp-departemen" required></select>
-            </div>
-            <div class="col-md-4">
-              <label class="form-label fw-bold small">Klasifikasi Kecelakaan *</label>
-              <select class="form-select emp-klasifikasi" required></select>
-            </div>
-            <div class="col-md-4">
-              <label class="form-label fw-bold small">Nama Karyawan Terlibat</label>
-              <input type="text" class="form-control emp-karyawan" placeholder="Nama korban/karyawan">
-            </div>
-            <div class="col-md-4">
-              <label class="form-label fw-bold small">Jabatan</label>
-              <select class="form-select emp-jabatan"></select>
-            </div>
-            <div class="col-md-2">
-              <label class="form-label fw-bold small">Umur (Tahun)</label>
-              <select class="form-select emp-umur"></select>
-            </div>
-            <div class="col-md-2">
-              <label class="form-label fw-bold small">Masa Kerja</label>
-              <select class="form-select emp-masaKerja"></select>
-            </div>
-          </div>
-        `;
-
-        container.appendChild(div);
-
-        // Pasang event listener tombol hapus
-        const delBtn = div.querySelector('.btn-del-emp');
-        if (delBtn) {
-          delBtn.addEventListener('click', function() {
-            div.remove();
-          });
-        }
-
-        // Populate Options dari Master Cache
-        if (masterCache) {
-          fillSelectOptions(div.querySelector('.emp-perusahaan'), masterCache.perusahaan);
-          fillSelectOptions(div.querySelector('.emp-departemen'), masterCache.departemen);
-          fillSelectOptions(div.querySelector('.emp-klasifikasi'), masterCache.klasifikasi);
-          fillSelectOptions(div.querySelector('.emp-jabatan'), masterCache.jabatan);
-          fillSelectOptions(div.querySelector('.emp-umur'), masterCache.umur);
-          fillSelectOptions(div.querySelector('.emp-masaKerja'), masterCache.masaKerja);
-        }
-      }
-
-      // Fungsi Tambah Baris Lampiran
-      function createAttachmentRow() {
-        attachmentCount++;
-        const container = document.getElementById('attachmentListContainer');
-        if (!container) return;
-
-        const rowId = `attachRow_${attachmentCount}`;
-        const div = document.createElement('div');
-        div.className = 'card p-3 mb-3 border border-light-subtle shadow-sm rounded-3';
-        div.id = rowId;
-
-        div.innerHTML = `
-          <div class="row align-items-center g-3">
-            <div class="col-md-5">
-              <label class="form-label fw-bold small mb-1">File Gambar / Dokumen #${attachmentCount}</label>
-              <input type="file" class="form-control file-input-item" accept="image/*,application/pdf">
-            </div>
-            <div class="col-md-5">
-              <label class="form-label fw-bold small mb-1">Keterangan / Tipe File</label>
-              <select class="form-select file-type-item">
-                <option value="Foto Kejadian Awal">Foto Kejadian Awal</option>
-                <option value="Foto Kerusakan Unit">Foto Kerusakan Unit</option>
-                <option value="Foto Sketsa / Peta">Foto Sketsa / Peta</option>
-                <option value="Dokumen BAP / Kronologis">Dokumen BAP / Kronologis</option>
-                <option value="Lampiran Lainnya">Lampiran Lainnya</option>
-              </select>
-            </div>
-            <div class="col-md-2 text-end pt-3">
-              <button type="button" class="btn btn-outline-danger btn-sm w-100 fw-bold btn-del-attach" title="Hapus">
-                <i class="bi bi-trash me-1"></i> Hapus
-              </button>
-            </div>
-            <div class="col-12 preview-box d-none mt-2">
-              <div class="p-2 border rounded bg-light d-flex align-items-center gap-3">
-                <img src="" class="img-preview" style="max-height: 80px; border-radius: 6px; display: none;">
-                <span class="file-name-text text-muted small fw-bold"></span>
-              </div>
-            </div>
-          </div>
-        `;
-
-        container.appendChild(div);
-
-        // Listener Hapus
-        const delBtn = div.querySelector('.btn-del-attach');
-        if (delBtn) {
-          delBtn.addEventListener('click', () => div.remove());
-        }
-
-        // Listener File Preview
-        const fileInput = div.querySelector('.file-input-item');
-        const previewBox = div.querySelector('.preview-box');
-        const imgPreview = div.querySelector('.img-preview');
-        const fileNameText = div.querySelector('.file-name-text');
-
-        fileInput.addEventListener('change', function() {
-          if (this.files && this.files[0]) {
-            const file = this.files[0];
-            fileNameText.textContent = file.name + ` (${(file.size/1024).toFixed(1)} KB)`;
-            previewBox.classList.remove('d-none');
-
-            if (file.type.startsWith('image/')) {
-              const reader = new FileReader();
-              reader.onload = e => {
-                imgPreview.src = e.target.result;
-                imgPreview.style.display = 'block';
-              };
-              reader.readAsDataURL(file);
-            } else {
-              imgPreview.style.display = 'none';
-            }
-          } else {
-            previewBox.classList.add('d-none');
+    // Helper mengisi dropdown select
+    function populateSelect(selectEl, arrayItems) {
+      if (!selectEl) return;
+      selectEl.innerHTML = '<option value="">-- Pilih --</option>';
+      if (Array.isArray(arrayItems)) {
+        arrayItems.forEach(item => {
+          if (item !== "" && item !== null && item !== undefined) {
+            const opt = document.createElement("option");
+            opt.value = item;
+            opt.textContent = item;
+            selectEl.appendChild(opt);
           }
         });
       }
+    }
 
-      // Convert File Ke Base64
-      function fileToBase64(file) {
-        return new Promise((resolve, reject) => {
-          const reader = new FileReader();
-          reader.onload = () => {
-            const raw = reader.result;
-            const b64 = raw.includes(',') ? raw.split(',')[1] : raw;
-            resolve(b64);
-          };
-          reader.onerror = err => reject(err);
-          reader.readAsDataURL(file);
-        });
+    function populateById(id, items) {
+      const el = document.getElementById(id);
+      if (el) populateSelect(el, items);
+    }
+
+    // Mengisi seluruh dropdown utama dari Master Data
+    function populateAllMainDropdowns() {
+      if (!masterCache) return;
+      populateById("in_jam", masterCache.jam);
+      populateById("in_lokasi", masterCache.lokasi);
+      if (String(USER_ROLE).toLowerCase() === 'admin') populateById("in_site", masterCache.site);
+
+      populateById("in_alatTerlibat", masterCache.kategoriAlat);
+      populateById("in_jenisAlat", masterCache.jenisAlat);
+      populateById("in_jenisKontak", masterCache.jenisKontak);
+      populateById("in_sumberKecelakaan", masterCache.sumberKecelakaan);
+
+      populateById("in_tta", masterCache.tta);
+      populateById("in_ketTta", masterCache.ketTta);
+      populateById("in_kta", masterCache.kta);
+      populateById("in_ketKta", masterCache.ketKta);
+      populateById("in_faktorManusia", masterCache.faktorManusia);
+      populateById("in_ketManusia", masterCache.ketFaktorManusia);
+      populateById("in_faktorPekerjaan", masterCache.faktorPekerjaan);
+      populateById("in_ketPekerjaan", masterCache.ketFaktorPekerjaan);
+      populateById("in_kurangKendali", masterCache.kurangKendali);
+      populateById("in_ketKendali", masterCache.ketKurangKendali);
+    }
+
+    // Tambah Baris Karyawan Dinamis (+)
+    function createEmployeeRow() {
+      employeeCount++;
+      const container = document.getElementById('employeeListContainer');
+      if (!container) return;
+
+      const rowId = `empRow_${employeeCount}`;
+      const div = document.createElement('div');
+      div.className = 'card p-3 mb-3 border border-light-subtle shadow-sm rounded-3 emp-card';
+      div.id = rowId;
+
+      div.innerHTML = `
+        <div class="d-flex justify-content-between align-items-center mb-2 pb-2 border-bottom">
+          <span class="fw-bold text-danger small"><i class="bi bi-person me-1"></i> Karyawan Terlibat #${employeeCount}</span>
+          ${employeeCount > 1 ? `
+            <button type="button" class="btn btn-outline-danger btn-sm py-0 px-2 fw-bold btn-del-emp">
+              <i class="bi bi-trash me-1"></i> Hapus
+            </button>
+          ` : ''}
+        </div>
+        <div class="row g-3">
+          <div class="col-md-4">
+            <label class="form-label fw-bold small">Perusahaan *</label>
+            <select class="form-select emp-perusahaan" required></select>
+          </div>
+          <div class="col-md-4">
+            <label class="form-label fw-bold small">Departemen *</label>
+            <select class="form-select emp-departemen" required></select>
+          </div>
+          <div class="col-md-4">
+            <label class="form-label fw-bold small">Klasifikasi Kecelakaan *</label>
+            <select class="form-select emp-klasifikasi" required></select>
+          </div>
+          <div class="col-md-4">
+            <label class="form-label fw-bold small">Nama Karyawan Terlibat</label>
+            <input type="text" class="form-control emp-karyawan" placeholder="Nama korban/karyawan">
+          </div>
+          <div class="col-md-4">
+            <label class="form-label fw-bold small">Jabatan</label>
+            <select class="form-select emp-jabatan"></select>
+          </div>
+          <div class="col-md-2">
+            <label class="form-label fw-bold small">Umur (Tahun)</label>
+            <select class="form-select emp-umur"></select>
+          </div>
+          <div class="col-md-2">
+            <label class="form-label fw-bold small">Masa Kerja</label>
+            <select class="form-select emp-masaKerja"></select>
+          </div>
+        </div>
+      `;
+
+      container.appendChild(div);
+
+      const delBtn = div.querySelector('.btn-del-emp');
+      if (delBtn) {
+        delBtn.addEventListener('click', () => div.remove());
       }
 
-      function doRedirect() {
-        if (countdownTimer) clearInterval(countdownTimer);
-        try {
-          window.top.location.href = redirectUrl;
-        } catch (e) {
-          window.location.href = redirectUrl;
+      // Isi pilihan dari Master Data yang didapat dari server
+      if (masterCache) {
+        populateSelect(div.querySelector('.emp-perusahaan'), masterCache.perusahaan);
+        populateSelect(div.querySelector('.emp-departemen'), masterCache.departemen);
+        populateSelect(div.querySelector('.emp-klasifikasi'), masterCache.klasifikasi);
+        populateSelect(div.querySelector('.emp-jabatan'), masterCache.jabatan);
+        populateSelect(div.querySelector('.emp-umur'), masterCache.umur);
+        populateSelect(div.querySelector('.emp-masaKerja'), masterCache.masaKerja);
+      }
+    }
+
+    // Tambah Baris Lampiran (+)
+    function createAttachmentRow() {
+      attachmentCount++;
+      const container = document.getElementById('attachmentListContainer');
+      if (!container) return;
+
+      const rowId = `attachRow_${attachmentCount}`;
+      const div = document.createElement('div');
+      div.className = 'card p-3 mb-3 border border-light-subtle shadow-sm rounded-3';
+      div.id = rowId;
+
+      div.innerHTML = `
+        <div class="row align-items-center g-3">
+          <div class="col-md-5">
+            <label class="form-label fw-bold small mb-1">File Gambar / Dokumen #${attachmentCount}</label>
+            <input type="file" class="form-control file-input-item" accept="image/*,application/pdf">
+          </div>
+          <div class="col-md-5">
+            <label class="form-label fw-bold small mb-1">Keterangan / Tipe File</label>
+            <select class="form-select file-type-item">
+              <option value="Foto Kejadian Awal">Foto Kejadian Awal</option>
+              <option value="Foto Kerusakan Unit">Foto Kerusakan Unit</option>
+              <option value="Foto Sketsa / Peta">Foto Sketsa / Peta</option>
+              <option value="Dokumen BAP / Kronologis">Dokumen BAP / Kronologis</option>
+              <option value="Lampiran Lainnya">Lampiran Lainnya</option>
+            </select>
+          </div>
+          <div class="col-md-2 text-end pt-3">
+            <button type="button" class="btn btn-outline-danger btn-sm w-100 fw-bold btn-del-attach" title="Hapus">
+              <i class="bi bi-trash me-1"></i> Hapus
+            </button>
+          </div>
+          <div class="col-12 preview-box d-none mt-2">
+            <div class="p-2 border rounded bg-light d-flex align-items-center gap-3">
+              <img src="" class="img-preview" style="max-height: 80px; border-radius: 6px; display: none;">
+              <span class="file-name-text text-muted small fw-bold"></span>
+            </div>
+          </div>
+        </div>
+      `;
+
+      container.appendChild(div);
+
+      const delBtn = div.querySelector('.btn-del-attach');
+      if (delBtn) delBtn.addEventListener('click', () => div.remove());
+
+      const fileInput = div.querySelector('.file-input-item');
+      const previewBox = div.querySelector('.preview-box');
+      const imgPreview = div.querySelector('.img-preview');
+      const fileNameText = div.querySelector('.file-name-text');
+
+      fileInput.addEventListener('change', function() {
+        if (this.files && this.files[0]) {
+          const file = this.files[0];
+          fileNameText.textContent = file.name + ` (${(file.size/1024).toFixed(1)} KB)`;
+          previewBox.classList.remove('d-none');
+
+          if (file.type.startsWith('image/')) {
+            const reader = new FileReader();
+            reader.onload = e => {
+              imgPreview.src = e.target.result;
+              imgPreview.style.display = 'block';
+            };
+            reader.readAsDataURL(file);
+          } else {
+            imgPreview.style.display = 'none';
+          }
+        } else {
+          previewBox.classList.add('d-none');
         }
+      });
+    }
+
+    function fileToBase64(file) {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => {
+          const raw = reader.result;
+          const b64 = raw.includes(',') ? raw.split(',')[1] : raw;
+          resolve(b64);
+        };
+        reader.onerror = err => reject(err);
+        reader.readAsDataURL(file);
+      });
+    }
+
+    function doRedirect() {
+      if (countdownTimer) clearInterval(countdownTimer);
+      try {
+        window.top.location.href = redirectUrl;
+      } catch (e) {
+        window.location.href = redirectUrl;
       }
+    }
 
-      // Inisialisasi Event & Data Saat DOM Siap
-      document.addEventListener('DOMContentLoaded', function() {
+    document.addEventListener('DOMContentLoaded', function() {
+      // Event tombol Tambah (+)
+      document.getElementById('btnAddEmp').addEventListener('click', createEmployeeRow);
+      document.getElementById('btnAddAttach').addEventListener('click', createAttachmentRow);
+      document.getElementById('btnManualRedirect').addEventListener('click', doRedirect);
 
-        // Bind Klik Tombol (+)
-        document.getElementById('btnAddEmployee').addEventListener('click', createEmployeeRow);
-        document.getElementById('btnAddAttachment').addEventListener('click', createAttachmentRow);
-        document.getElementById('btnManualRedirect').addEventListener('click', doRedirect);
+      document.getElementById('in_tgl').addEventListener('change', function() {
+        if (!this.value) return;
+        const date = new Date(this.value);
+        const days = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
+        const months = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
+        document.getElementById('in_hari').value = days[date.getDay()];
+        document.getElementById('in_bulan').value = months[date.getMonth()];
+      });
 
-        // Auto Fill Hari/Bulan saat Ubah Tanggal
-        document.getElementById('in_tgl').addEventListener('change', function() {
-          if (!this.value) return;
-          const date = new Date(this.value);
-          const days = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
-          const months = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
-          document.getElementById('in_hari').value = days[date.getDay()];
-          document.getElementById('in_bulan').value = months[date.getMonth()];
+      // 1. Buat 1 baris lampiran awal
+      createAttachmentRow();
+
+      // 2. MANGGIL DATA MURNI DARI TAB SHEET MASTER (Google Apps Script Server)
+      google.script.run
+        .withSuccessHandler(res => {
+          if (res && res.success && res.master) {
+            masterCache = res.master; // Simpan data dari sheet master
+            populateAllMainDropdowns(); // Isi semua dropdown form
+            createEmployeeRow(); // Buat baris karyawan pertama dengan dropdown terisi
+          } else {
+            alert("⚠️ Gagal memuat Master Data: " + (res ? res.message : "Error"));
+          }
+        })
+        .withFailureHandler(err => {
+          alert("❌ Gagal terhubung ke Master Data Server: " + err.message);
+        })
+        .getFormMasterData(TOKEN);
+
+      // 3. Submit Form
+      document.getElementById('formIncident').addEventListener('submit', async function(e) {
+        e.preventDefault();
+        const btn = document.getElementById("btnSubmit");
+        btn.disabled = true;
+        btn.innerHTML = `<span class="spinner-border spinner-border-sm me-2"></span> Menyimpan Laporan...`;
+
+        const empCards = document.querySelectorAll('#employeeListContainer .emp-card');
+        let karyawanList = [];
+
+        empCards.forEach(card => {
+          karyawanList.push({
+            perusahaan: card.querySelector('.emp-perusahaan').value,
+            departemen: card.querySelector('.emp-departemen').value,
+            klasifikasi: card.querySelector('.emp-klasifikasi').value,
+            karyawan: card.querySelector('.emp-karyawan').value,
+            jabatan: card.querySelector('.emp-jabatan').value,
+            umur: card.querySelector('.emp-umur').value,
+            masaKerja: card.querySelector('.emp-masaKerja').value
+          });
         });
 
-        // Buat Baris Default Awal
-        createAttachmentRow();
+        const formData = {
+          site: document.getElementById("in_site").value,
+          tglKejadian: document.getElementById("in_tgl").value,
+          hari: document.getElementById("in_hari").value,
+          bulan: document.getElementById("in_bulan").value,
+          jamKejadian: document.getElementById("in_jam").value,
+          shift: document.getElementById("in_shift").value,
+          lokasi: document.getElementById("in_lokasi").value,
+          kronologis: document.getElementById("in_kronologis").value,
+          alatTerlibat: document.getElementById("in_alatTerlibat").value,
+          jenisAlat: document.getElementById("in_jenisAlat").value,
+          lossCost: document.getElementById("in_lossCost").value,
+          jenisKontak: document.getElementById("in_jenisKontak").value,
+          sumberKecelakaan: document.getElementById("in_sumberKecelakaan").value,
+          tta: document.getElementById("in_tta").value,
+          ketTta: document.getElementById("in_ketTta").value,
+          kta: document.getElementById("in_kta").value,
+          ketKta: document.getElementById("in_ketKta").value,
+          faktorManusia: document.getElementById("in_faktorManusia").value,
+          ketManusia: document.getElementById("in_ketManusia").value,
+          faktorPekerjaan: document.getElementById("in_faktorPekerjaan").value,
+          ketPekerjaan: document.getElementById("in_ketPekerjaan").value,
+          kurangKendali: document.getElementById("in_kurangKendali").value,
+          ketKendali: document.getElementById("in_ketKendali").value,
+          tindakanPerbaikan: document.getElementById("in_tindakanPerbaikan").value,
+          tindakanPencegahan: document.getElementById("in_tindakanPencegahan").value,
+          dueDate: document.getElementById("in_dueDate").value,
+          karyawanList: karyawanList
+        };
 
-        // Load Master Data dari Server
         google.script.run
-          .withSuccessHandler(res => {
-            if (res && res.success && res.master) {
-              masterCache = res.master;
+          .withSuccessHandler(async res => {
+            if (res && res.success) {
+              const rows = document.querySelectorAll('#attachmentListContainer .card');
+              let validFiles = [];
 
-              // Buat Baris Karyawan Pertama
-              createEmployeeRow();
+              rows.forEach(r => {
+                const fileInput = r.querySelector('.file-input-item');
+                const typeSelect = r.querySelector('.file-type-item');
+                if (fileInput && fileInput.files && fileInput.files[0]) {
+                  validFiles.push({
+                    file: fileInput.files[0],
+                    type: typeSelect ? typeSelect.value : 'Foto Kejadian Awal'
+                  });
+                }
+              });
 
-              // Populate Option Dropdown Utama
-              fillById("in_jam", masterCache.jam);
-              fillById("in_lokasi", masterCache.lokasi);
-              if (String(USER_ROLE).toLowerCase() === 'admin') fillById("in_site", masterCache.site);
+              let uploadSuccessCount = 0;
+              let uploadFailedCount = 0;
 
-              fillById("in_alatTerlibat", masterCache.kategoriAlat);
-              fillById("in_jenisAlat", masterCache.jenisAlat);
-              fillById("in_jenisKontak", masterCache.jenisKontak);
-              fillById("in_sumberKecelakaan", masterCache.sumberKecelakaan);
-
-              fillById("in_tta", masterCache.tta);
-              fillById("in_ketTta", masterCache.ketTta);
-              fillById("in_kta", masterCache.kta);
-              fillById("in_ketKta", masterCache.ketKta);
-              fillById("in_faktorManusia", masterCache.faktorManusia);
-              fillById("in_ketManusia", masterCache.ketFaktorManusia);
-              fillById("in_faktorPekerjaan", masterCache.faktorPekerjaan);
-              fillById("in_ketPekerjaan", masterCache.ketFaktorPekerjaan);
-              fillById("in_kurangKendali", masterCache.kurangKendali);
-              fillById("in_ketKendali", masterCache.ketKurangKendali);
-            }
-          })
-          .getFormMasterData(TOKEN);
-
-        // Event Listener Submit Form
-        document.getElementById('formIncident').addEventListener('submit', async function(e) {
-          e.preventDefault();
-          const btn = document.getElementById("btnSubmit");
-          btn.disabled = true;
-          btn.innerHTML = `<span class="spinner-border spinner-border-sm me-2"></span> Menyimpan Laporan...`;
-
-          // Ambil Data Karyawan Dinamis
-          const empCards = document.querySelectorAll('#employeeListContainer .emp-card');
-          let karyawanList = [];
-
-          empCards.forEach(card => {
-            karyawanList.push({
-              perusahaan: card.querySelector('.emp-perusahaan').value,
-              departemen: card.querySelector('.emp-departemen').value,
-              klasifikasi: card.querySelector('.emp-klasifikasi').value,
-              karyawan: card.querySelector('.emp-karyawan').value,
-              jabatan: card.querySelector('.emp-jabatan').value,
-              umur: card.querySelector('.emp-umur').value,
-              masaKerja: card.querySelector('.emp-masaKerja').value
-            });
-          });
-
-          const formData = {
-            site: document.getElementById("in_site").value,
-            tglKejadian: document.getElementById("in_tgl").value,
-            hari: document.getElementById("in_hari").value,
-            bulan: document.getElementById("in_bulan").value,
-            jamKejadian: document.getElementById("in_jam").value,
-            shift: document.getElementById("in_shift").value,
-            lokasi: document.getElementById("in_lokasi").value,
-            kronologis: document.getElementById("in_kronologis").value,
-            alatTerlibat: document.getElementById("in_alatTerlibat").value,
-            jenisAlat: document.getElementById("in_jenisAlat").value,
-            lossCost: document.getElementById("in_lossCost").value,
-            jenisKontak: document.getElementById("in_jenisKontak").value,
-            sumberKecelakaan: document.getElementById("in_sumberKecelakaan").value,
-            tta: document.getElementById("in_tta").value,
-            ketTta: document.getElementById("in_ketTta").value,
-            kta: document.getElementById("in_kta").value,
-            ketKta: document.getElementById("in_ketKta").value,
-            faktorManusia: document.getElementById("in_faktorManusia").value,
-            ketManusia: document.getElementById("in_ketManusia").value,
-            faktorPekerjaan: document.getElementById("in_faktorPekerjaan").value,
-            ketPekerjaan: document.getElementById("in_ketPekerjaan").value,
-            kurangKendali: document.getElementById("in_kurangKendali").value,
-            ketKendali: document.getElementById("in_ketKendali").value,
-            tindakanPerbaikan: document.getElementById("in_tindakanPerbaikan").value,
-            tindakanPencegahan: document.getElementById("in_tindakanPencegahan").value,
-            dueDate: document.getElementById("in_dueDate").value,
-            karyawanList: karyawanList
-          };
-
-          // Simpan Laporan Utama
-          google.script.run
-            .withSuccessHandler(async res => {
-              if (res && res.success) {
-                // Ambil File Lampiran
-                const rows = document.querySelectorAll('#attachmentListContainer .card');
-                let validFiles = [];
-
-                rows.forEach(r => {
-                  const fileInput = r.querySelector('.file-input-item');
-                  const typeSelect = r.querySelector('.file-type-item');
-                  if (fileInput && fileInput.files && fileInput.files[0]) {
-                    validFiles.push({
-                      file: fileInput.files[0],
-                      type: typeSelect ? typeSelect.value : 'Foto Kejadian Awal'
+              if (validFiles.length > 0) {
+                for (let i = 0; i < validFiles.length; i++) {
+                  btn.innerHTML = `<span class="spinner-border spinner-border-sm me-2"></span> Mengunggah Lampiran (${i + 1}/${validFiles.length})...`;
+                  try {
+                    const item = validFiles[i];
+                    const b64 = await fileToBase64(item.file);
+                    
+                    const upRes = await new Promise((resUp, rejUp) => {
+                      google.script.run
+                        .withSuccessHandler(r => resUp(r))
+                        .withFailureHandler(e => rejUp(e))
+                        .uploadAttachment(TOKEN, res.noInsiden, {
+                          fileName: item.file.name,
+                          mimeType: item.file.type,
+                          bytes: b64
+                        }, item.type);
                     });
-                  }
-                });
 
-                let uploadSuccessCount = 0;
-                let uploadFailedCount = 0;
-
-                // Proses Upload Lampiran
-                if (validFiles.length > 0) {
-                  for (let i = 0; i < validFiles.length; i++) {
-                    btn.innerHTML = `<span class="spinner-border spinner-border-sm me-2"></span> Mengunggah Lampiran (${i + 1}/${validFiles.length})...`;
-                    try {
-                      const item = validFiles[i];
-                      const b64 = await fileToBase64(item.file);
-                      
-                      const upRes = await new Promise((resUp, rejUp) => {
-                        google.script.run
-                          .withSuccessHandler(r => resUp(r))
-                          .withFailureHandler(e => rejUp(e))
-                          .uploadAttachment(TOKEN, res.noInsiden, {
-                            fileName: item.file.name,
-                            mimeType: item.file.type,
-                            bytes: b64
-                          }, item.type);
-                      });
-
-                      if (upRes && upRes.success) uploadSuccessCount++;
-                      else uploadFailedCount++;
-                    } catch (errUp) {
-                      uploadFailedCount++;
-                    }
+                    if (upRes && upRes.success) uploadSuccessCount++;
+                    else uploadFailedCount++;
+                  } catch (errUp) {
+                    uploadFailedCount++;
                   }
                 }
-
-                // Tampilkan Modal Berhasil
-                document.getElementById("modalNoInsiden").innerText = res.noInsiden;
-                redirectUrl = SCRIPT_URL + "?token=" + TOKEN + "&page=IncidentList";
-
-                const modalEl = document.getElementById('successModal');
-                const modal = new bootstrap.Modal(modalEl);
-
-                if (uploadFailedCount > 0) {
-                  document.getElementById("modalLampiranStatus").innerHTML = `
-                    <span class="text-danger fw-bold">${uploadSuccessCount} berhasil, ${uploadFailedCount} gagal diupload</span>
-                  `;
-                  document.getElementById("redirectCountdownBox").className = "alert alert-warning border-0 py-2 px-3 small text-center mb-3";
-                  document.getElementById("redirectCountdownBox").innerHTML = `
-                    <i class="bi bi-exclamation-triangle-fill text-warning me-1"></i>
-                    <span>Beberapa lampiran gagal terupload. Klik tombol di bawah.</span>
-                  `;
-                  modal.show();
-                } else {
-                  document.getElementById("modalLampiranStatus").innerText = validFiles.length > 0 
-                    ? `${uploadSuccessCount} dari ${validFiles.length} file terupload` 
-                    : "Tidak ada berkas diunggah";
-
-                  modal.show();
-
-                  let secondsLeft = 3;
-                  const countEl = document.getElementById("redirectCountdown");
-                  if (countEl) countEl.innerText = secondsLeft;
-
-                  countdownTimer = setInterval(() => {
-                    secondsLeft--;
-                    if (countEl) countEl.innerText = secondsLeft;
-                    if (secondsLeft <= 0) {
-                      clearInterval(countdownTimer);
-                      doRedirect();
-                    }
-                  }, 1000);
-                }
-
-              } else {
-                alert("❌ Gagal menyimpan laporan: " + (res ? res.message : "Error"));
-                btn.disabled = false;
-                btn.innerHTML = `<i class="bi bi-send-check me-2"></i> Kirim Laporan Insiden`;
               }
-            })
-            .withFailureHandler(err => {
-              alert("❌ Error Server: " + err.message);
+
+              document.getElementById("modalNoInsiden").innerText = res.noInsiden;
+              redirectUrl = SCRIPT_URL + "?token=" + TOKEN + "&page=IncidentList";
+
+              const modalEl = document.getElementById('successModal');
+              const modal = new bootstrap.Modal(modalEl);
+
+              if (uploadFailedCount > 0) {
+                document.getElementById("modalLampiranStatus").innerHTML = `
+                  <span class="text-danger fw-bold">${uploadSuccessCount} berhasil, ${uploadFailedCount} gagal diupload</span>
+                `;
+                document.getElementById("redirectCountdownBox").className = "alert alert-warning border-0 py-2 px-3 small text-center mb-3";
+                document.getElementById("redirectCountdownBox").innerHTML = `
+                  <i class="bi bi-exclamation-triangle-fill text-warning me-1"></i>
+                  <span>Beberapa lampiran gagal terupload. Klik tombol di bawah.</span>
+                `;
+                modal.show();
+              } else {
+                document.getElementById("modalLampiranStatus").innerText = validFiles.length > 0 
+                  ? `${uploadSuccessCount} dari ${validFiles.length} file terupload` 
+                  : "Tidak ada berkas diunggah";
+
+                modal.show();
+
+                let secondsLeft = 3;
+                const countEl = document.getElementById("redirectCountdown");
+                if (countEl) countEl.innerText = secondsLeft;
+
+                countdownTimer = setInterval(() => {
+                  secondsLeft--;
+                  if (countEl) countEl.innerText = secondsLeft;
+                  if (secondsLeft <= 0) {
+                    clearInterval(countdownTimer);
+                    doRedirect();
+                  }
+                }, 1000);
+              }
+
+            } else {
+              alert("❌ Gagal menyimpan laporan: " + (res ? res.message : "Error"));
               btn.disabled = false;
               btn.innerHTML = `<i class="bi bi-send-check me-2"></i> Kirim Laporan Insiden`;
-            })
-            .saveIncidentReport(TOKEN, formData);
-        });
-
+            }
+          })
+          .withFailureHandler(err => {
+            alert("❌ Error Server: " + err.message);
+            btn.disabled = false;
+            btn.innerHTML = `<i class="bi bi-send-check me-2"></i> Kirim Laporan Insiden`;
+          })
+          .saveIncidentReport(TOKEN, formData);
       });
 
     })();
-  </script>
+  })();
+</script>
 </body>
 </html>

@@ -1,29 +1,26 @@
 /**
  * ============================================================================
- * MODUL GENERATE NOMOR INVESTIGASI & PENYIMPANAN DATA INSIDEN + LAMPIRAN
- * File: generatenomerinvestigasi.gs
+ * HANDLER GENERATE NOMOR INVESTIGASI & TRANSAKSI LAPORAN INSIDEN
+ * File: handlers/generatenomerinvestigasi.js
  * ============================================================================
  */
 
 /**
- * Auto-Generate Nomor Insiden dengan Reset Urutan Harian ke 0001 per Tanggal & Site
+ * Auto-Generate Nomor Insiden Reset Urutan Harian per Tanggal & Site
  * Format: DDMMYYYY-INV-SITE-0001
  */
 function generateIncidentID(siteName, tglKejadian) {
   const ss = getTransaksiSS();
   const sheet = ss.getSheetByName(CONFIG.TAB_INSIDEN);
   
-  // Format Tanggal Kejadian (DDMMYYYY)
   let dateObj = tglKejadian ? new Date(tglKejadian) : new Date();
   let dd = String(dateObj.getDate()).padStart(2, '0');
   let mm = String(dateObj.getMonth() + 1).padStart(2, '0');
   let yyyy = dateObj.getFullYear();
   let dateStr = `${dd}${mm}${yyyy}`;
 
-  // Pembersihan Nama Site
   let cleanSite = String(siteName).replace(/[^a-zA-Z0-9]/g, '').toUpperCase();
 
-  // Hitung jumlah laporan pada tanggal & site yang sama
   let lastRow = sheet.getLastRow();
   let dailyCounter = 1;
 
@@ -44,7 +41,7 @@ function generateIncidentID(siteName, tglKejadian) {
 }
 
 /**
- * Simpan Data Laporan Insiden Lengkap (Mendukung Multi-Karyawan Terlibat)
+ * Simpan Data Laporan Insiden (Mendukung Multi-Karyawan per 1 Insiden ID)
  */
 function saveIncidentReport(token, formData) {
   try {
@@ -52,7 +49,6 @@ function saveIncidentReport(token, formData) {
     const ss = getTransaksiSS();
     const sheet = ss.getSheetByName(CONFIG.TAB_INSIDEN);
 
-    // Auto-Generate 1 ID Insiden yang sama untuk seluruh karyawan di laporan ini
     const noInsiden = generateIncidentID(formData.site, formData.tglKejadian);
     const timestamp = new Date();
 
@@ -60,12 +56,12 @@ function saveIncidentReport(token, formData) {
       ? formData.karyawanList 
       : [{}];
 
-    // Simpan baris data di Sheet Transaksi sejumlah karyawan yang terlibat
+    // Simpan baris transaksi sebanyak jumlah karyawan yang didaftarkan
     empList.forEach(emp => {
       const rowData = [
         timestamp,                          // 1. Timestamp
         noInsiden,                          // 2. No Insiden
-        session.Nama || session.Username,   // 3. Nama Pelapor
+        session.Nama || session.Username,   // 3. Pelapor
         formData.hari || '',                // 4. Hari
         formData.tglKejadian || '',         // 5. Tanggal
         formData.bulan || '',               // 6. Bulan
@@ -73,34 +69,34 @@ function saveIncidentReport(token, formData) {
         formData.shift || '',               // 8. Shift
         formData.lokasi || '',              // 9. Lokasi Spesifik
         formData.kronologis || '',          // 10. Kronologis
-        formData.site || '',                // 11. Site/Business Unit (BU)
-        emp.perusahaan || '',               // 12. Perusahan
-        emp.departemen || '',               // 13. Departement
-        emp.klasifikasi || '',              // 14. Klasifikasi Kecelakaan
+        formData.site || '',                // 11. Site/Business Unit
+        emp.perusahaan || '',               // 12. Perusahaan
+        emp.departemen || '',               // 13. Departemen
+        emp.klasifikasi || '',              // 14. Klasifikasi
         emp.karyawan || '',                 // 15. Karyawan Terlibat / Nama
         emp.jabatan || '',                  // 16. Jabatan
-        emp.umur || '',                     // 17. Umur (Tahun)
+        emp.umur || '',                     // 17. Umur
         emp.masaKerja || '',                // 18. Masa Kerja
         formData.alatTerlibat || '',        // 19. Alat Terlibat
         formData.jenisAlat || '',           // 20. Jenis Alat
         formData.lossCost || '',            // 21. Loss Cost
         formData.jenisKontak || '',         // 22. Jenis Kontak
         formData.sumberKecelakaan || '',    // 23. Sumber Kecelakaan
-        formData.tta || '',                 // 24. Tindakan Tidak Aman (TTA)
-        formData.ketTta || '',              // 25. Keterangan TTA
-        formData.kta || '',                 // 26. Kondisi Tidak Aman (KTA)
-        formData.ketKta || '',              // 27. Keterangan KTA
+        formData.tta || '',                 // 24. TTA
+        formData.ketTta || '',              // 25. Ket TTA
+        formData.kta || '',                 // 26. KTA
+        formData.ketKta || '',              // 27. Ket KTA
         formData.faktorManusia || '',       // 28. Faktor Manusia
-        formData.ketManusia || '',          // 29. Keterangan Faktor Manusia
+        formData.ketManusia || '',          // 29. Ket Faktor Manusia
         formData.faktorPekerjaan || '',     // 30. Faktor Pekerjaan
-        formData.ketPekerjaan || '',        // 31. Keterangan Faktor Pekerjaan
-        formData.kurangKendali || '',       // 32. Kurang Kendali Manajemen
-        formData.ketKendali || '',          // 33. Keterangan Kurang Kendali
-        formData.tindakanPerbaikan || '',   // 34. Tindakan Perbaikan
-        formData.tindakanPencegahan || '',  // 35. Tindakan Pencegahan
+        formData.ketPekerjaan || '',        // 31. Ket Faktor Pekerjaan
+        formData.kurangKendali || '',       // 32. Kurang Kendali
+        formData.ketKendali || '',          // 33. Ket Kurang Kendali
+        formData.tindakanPerbaikan || '',   // 34. Perbaikan
+        formData.tindakanPencegahan || '',  // 35. Pencegahan
         formData.dueDate || '',             // 36. Due Date
-        '',                                 // 37. Completion Date (Kosong saat input awal)
-        'Open'                              // 38. Status Laporan (Default: Open)
+        '',                                 // 37. Completion Date
+        'Open'                              // 38. Status Laporan
       ];
 
       sheet.appendRow(rowData);
@@ -112,79 +108,6 @@ function saveIncidentReport(token, formData) {
       noInsiden: noInsiden 
     };
   } catch (err) {
-    return { success: false, message: err.message };
-  }
-}
-
-/**
- * Upload Lampiran Media ke Google Drive dengan Sub-Folder Otomatis per Nomor Insiden
- */
-function uploadAttachment(token, noInsiden, fileObj, tipeLampiran) {
-  try {
-    const session = requireSession(token);
-    const ss = getTransaksiSS();
-    
-    // Pastikan Tab Sheet 'Lampiran' Tersedia
-    let sheetLampiran = ss.getSheetByName('Lampiran');
-    if (!sheetLampiran) {
-      sheetLampiran = ss.insertSheet('Lampiran');
-      sheetLampiran.appendRow(['ID_Lampiran', 'No Insiden', 'Tipe', 'Nama File', 'URL Drive', 'MimeType', 'Diupload Oleh', 'Diupload Pada']);
-    }
-
-    // ID Folder Utama Parent
-    const mainFolderId = (typeof CONFIG !== 'undefined' && CONFIG.FOLDER_DRIVE_ID) 
-      ? CONFIG.FOLDER_DRIVE_ID 
-      : '1VF_GLSbe8h_bvJ5LtR7kRylsO79HOTx_';
-
-    // 1. Ambil Folder Utama
-    let mainFolder;
-    try {
-      mainFolder = DriveApp.getFolderById(mainFolderId.trim());
-    } catch (eFolder) {
-      mainFolder = DriveApp.createFolder("HSE_Lampiran_Incidents");
-    }
-
-    // 2. Buat Sub-Folder Khusus Berdasarkan Nomor Insiden
-    let incidentFolder;
-    const subFolders = mainFolder.getFoldersByName(noInsiden);
-    if (subFolders.hasNext()) {
-      incidentFolder = subFolders.next();
-    } else {
-      incidentFolder = mainFolder.createFolder(noInsiden);
-    }
-
-    // 3. Dekode Base64 & Simpan File Ke Dalam Sub-Folder Tersebut
-    let cleanBase64 = fileObj.bytes || '';
-    if (cleanBase64.indexOf(',') !== -1) {
-      cleanBase64 = cleanBase64.split(',')[1];
-    }
-
-    const decodedBytes = Utilities.base64Decode(cleanBase64);
-    const blob = Utilities.newBlob(decodedBytes, fileObj.mimeType || 'image/png', fileObj.fileName);
-    const file = incidentFolder.createFile(blob);
-    
-    try {
-      file.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
-    } catch(eShare) {}
-
-    // 4. Catat Metadata ke Tab Sheet "Lampiran"
-    const idLampiran = 'LMP-' + Utilities.getUuid().substring(0, 8).toUpperCase();
-    const rowLampiran = [
-      idLampiran,                       // 1. ID_Lampiran
-      noInsiden,                        // 2. No Insiden
-      tipeLampiran || 'Foto Kejadian',  // 3. Tipe
-      fileObj.fileName,                 // 4. Nama File
-      file.getUrl(),                    // 5. URL Drive
-      fileObj.mimeType,                 // 6. MimeType
-      session.Nama || session.Username, // 7. Diupload Oleh
-      new Date()                        // 8. Diupload Pada
-    ];
-
-    sheetLampiran.appendRow(rowLampiran);
-
-    return { success: true, url: file.getUrl() };
-  } catch (err) {
-    Logger.log("Error Upload Attachment: " + err.message);
     return { success: false, message: err.message };
   }
 }

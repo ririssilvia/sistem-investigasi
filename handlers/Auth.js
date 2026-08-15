@@ -14,7 +14,7 @@ function doGet(e) {
   const session = token ? getValidSession(token) : null;
 
   if (session) {
-    const template = HtmlService.createTemplateFromFile('Dashboard');
+    const template = HtmlService.createTemplateFromFile('Views/Dashboard');
     template.userName = session.Nama || session.Username;
     template.userRole = session.Role;
     template.userSite = session.Site;
@@ -24,7 +24,7 @@ function doGet(e) {
       .addMetaTag('viewport', 'width=device-width, initial-scale=1');
   }
 
-  const template = HtmlService.createTemplateFromFile('Login');
+  const template = HtmlService.createTemplateFromFile('Views/Login');
   template.scriptUrl = ScriptApp.getService().getUrl();
   return template.evaluate()
     .setTitle('Monitoring Investigasi HSE — Login')
