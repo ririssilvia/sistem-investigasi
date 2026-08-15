@@ -103,7 +103,6 @@ function findIdx(candidates){
 function findCompanyIdx(){
   let i=findIdx(['Perusahaan','Nama Perusahaan','Perusahaan Terlibat','Nama Perusahaan Terlibat','Perusahaan Karyawan','Perusahaan/Kontraktor','Company','Company Name']);
   if(i!==-1)return i;
-  // Fallback: the transaction header may have a longer company-related name.
   const h=HEADERS.map(normalizeHeader);
   return h.findIndex(x=>x.includes('perusahaan') || x.includes('company'));
 }
@@ -118,6 +117,9 @@ function buildIndices(){
   IDX.chronology=findIdx(['Kronologis','Uraian Kronologis Kejadian','Kronologi']);
 }
 function val(row,idx,def='-'){const v=idx>=0?row[idx]:'';return v===null||v===undefined||String(v).trim()===''?def:v}
+function rawVal(row,idx){return idx>=0&&row[idx]!==null&&row[idx]!==undefined?String(row[idx]).trim():''}
+function uniqueNonEmpty(values){const seen=new Set(),out=[];values.forEach(v=>{const s=String(v??'').trim();if(!s||s==='-')return;const key=s.toLowerCase();if(!seen.has(key)){seen.add(key);out.push(s)}});return out}
+function joinValues(values){return uniqueNonEmpty(values).join(', ')||'-'}
 function escapeHtml(v){return String(v??'').replace(/[&<>'"]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[m]))}
 function formatDate(v){if(!v)return '-';const d=new Date(v);return isNaN(d.getTime())?String(v):d.toLocaleDateString('id-ID')}
 
@@ -146,7 +148,8 @@ function groupRows(rows){
   const map=new Map();
   rows.forEach(row=>{
     const id=String(val(row,IDX.id,''));const key=id||JSON.stringify(row);
-    if(!map.has(key))map.set(key,{row:row,count:0});map.get(key).count++;
+    if(!map.has(key))map.set(key,{row:row,rows:[],count:0});
+    const g=map.get(key);g.rows.push(row);g.count++;
   });
   return Array.from(map.values());
 }
@@ -179,8 +182,10 @@ function displayRows(groups){
   if(!groups.length){tbody.innerHTML='<tr><td colspan="8" class="text-center py-4 text-muted">Data laporan tidak ditemukan.</td></tr>';return}
   groups.forEach(g=>{
     const r=g.row,id=val(r,IDX.id),st=String(val(r,IDX.status,'Open'));
+    const employees=joinValues(g.rows.map(row=>rawVal(row,IDX.employee)));
+    const companies=joinValues(g.rows.map(row=>rawVal(row,IDX.company)));
     let badge='bg-danger';if(st.toLowerCase()==='closed')badge='bg-success';else if(st.toLowerCase().includes('progress'))badge='bg-warning text-dark';
-    tbody.insertAdjacentHTML('beforeend',`<tr><td class="fw-bold text-danger">${escapeHtml(id)}</td><td>${escapeHtml(formatDate(val(r,IDX.date,'')))}</td><td>${escapeHtml(val(r,IDX.site))}</td><td>${escapeHtml(val(r,IDX.company))}</td><td>${escapeHtml(val(r,IDX.classification))}</td><td>${g.count} karyawan</td><td><span class="badge ${badge}">${escapeHtml(st)}</span></td><td class="text-center"><a href="${SCRIPT_URL}?token=${encodeURIComponent(TOKEN)}&page=IncidentEdit&id=${encodeURIComponent(id)}" class="btn btn-outline-warning btn-sm"><i class="bi bi-pencil"></i> Edit</a></td></tr>`);
+    tbody.insertAdjacentHTML('beforeend',`<tr><td class="fw-bold text-danger">${escapeHtml(id)}</td><td>${escapeHtml(formatDate(val(r,IDX.date,'')))}</td><td>${escapeHtml(val(r,IDX.site))}</td><td>${escapeHtml(companies)}</td><td>${escapeHtml(val(r,IDX.classification))}</td><td>${escapeHtml(employees)}</td><td><span class="badge ${badge}">${escapeHtml(st)}</span></td><td class="text-center"><a href="${SCRIPT_URL}?token=${encodeURIComponent(TOKEN)}&page=IncidentEdit&id=${encodeURIComponent(id)}" class="btn btn-outline-warning btn-sm"><i class="bi bi-pencil"></i> Edit</a></td></tr>`);
   });
 }
 function setLoading(on,text){if(on){document.getElementById('listTableBody').innerHTML=`<tr><td colspan="8" class="text-center text-muted loading-row"><span class="spinner-border spinner-border-sm me-2"></span>${text}</td></tr>`;document.getElementById('paginationWrap').style.display='none'}}
