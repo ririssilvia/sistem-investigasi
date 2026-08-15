@@ -7,235 +7,70 @@
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
   <style>
-    body{background-color:#fff!important;color:#1a1a1a;font-family:'Segoe UI',sans-serif;overflow-x:hidden;margin:0;padding:0}
+    body{background:#fff!important;color:#1a1a1a;font-family:'Segoe UI',sans-serif;overflow-x:hidden;margin:0;padding:0}
     .main-content{margin-left:260px!important;padding:30px 40px;transition:margin-left .3s ease!important;background:#fff!important;min-height:100vh}
     .glass-card{background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:28px;box-shadow:0 4px 12px rgba(0,0,0,.03);margin-bottom:24px}
     .section-title{font-size:15px;font-weight:700;color:#e31e24;border-bottom:2px solid #fff0f1;padding-bottom:8px;margin-bottom:20px}
-    .btn-sinarmas{background:#e31e24;color:#fff;font-weight:600;border:none;padding:12px 28px;border-radius:8px}
-    .btn-sinarmas:hover{background:#b81419;color:#fff}
-    .form-control,.form-select{border-radius:8px;border:1px solid #cbd5e1;padding:10px 14px;font-size:13.5px}
-    .form-control:focus,.form-select:focus{border-color:#e31e24;box-shadow:0 0 0 .2rem rgba(227,30,36,.15)}
-    .emp-card{position:relative}
-    .emp-number{font-size:13px;font-weight:700;color:#e31e24}
+    .btn-sinarmas{background:#e31e24;color:#fff;font-weight:600;border:none;padding:12px 28px;border-radius:8px}.btn-sinarmas:hover{background:#b81419;color:#fff}
+    .form-control,.form-select{border-radius:8px;border:1px solid #cbd5e1;padding:10px 14px;font-size:13.5px}.form-control:focus,.form-select:focus{border-color:#e31e24;box-shadow:0 0 0 .2rem rgba(227,30,36,.15)}
+    .emp-card{position:relative}.emp-number{font-size:13px;font-weight:700;color:#e31e24}
+    .attachment-preview{display:none;margin-top:12px;padding:10px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px}.attachment-preview.show{display:block}.attachment-preview img{width:100%;max-height:260px;object-fit:contain;border-radius:8px;background:#fff}.attachment-preview .file-meta{font-size:12px;color:#64748b;margin-top:8px}
+    .success-modal-backdrop{position:fixed;inset:0;background:rgba(15,23,42,.62);display:none;align-items:center;justify-content:center;z-index:99999;padding:20px}.success-modal-backdrop.show{display:flex}.success-modal{width:min(460px,100%);background:#fff;border-radius:20px;box-shadow:0 25px 70px rgba(0,0,0,.25);padding:28px;text-align:center;animation:modalIn .22s ease-out}.success-icon{width:76px;height:76px;border-radius:50%;background:#e7f7ef;color:#198754;display:flex;align-items:center;justify-content:center;font-size:42px;margin:0 auto 16px}.success-modal h4{font-weight:800;margin-bottom:8px}.success-modal .subtitle{color:#64748b;font-size:14px;margin-bottom:18px}.success-info{background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;padding:14px;text-align:left;margin-bottom:16px}.success-info-row{display:flex;justify-content:space-between;gap:16px;font-size:13px;margin:7px 0}.success-info-row strong{color:#e31e24}.countdown-box{background:#dff3e8;color:#185c3b;border-radius:9px;padding:10px;font-size:13px;margin-bottom:12px}.btn-list-now{width:100%;background:#e31e24;color:#fff;border:none;border-radius:9px;padding:11px;font-weight:700}.btn-list-now:hover{background:#b81419;color:#fff}
+    @keyframes modalIn{from{opacity:0;transform:translateY(12px) scale(.98)}to{opacity:1;transform:translateY(0) scale(1)}}
     @media(max-width:991px){.main-content{margin-left:0!important;padding:20px}}
   </style>
 </head>
 <body>
   <?!= include('Sidebar',{scriptUrl:scriptUrl,token:token,page:'IncidentInput',userName:userName,userSite:userSite,userRole:userRole}); ?>
   <div class="main-content" id="mainContent">
-    <div class="d-flex justify-content-between align-items-center mb-4 pb-3 border-bottom">
-      <div class="d-flex align-items-center gap-3">
-        <button type="button" class="btn btn-outline-danger border-0 p-2 fs-4" onclick="toggleSidebar()"><i class="bi bi-list"></i></button>
-        <div><h3 class="fw-bold mb-0 text-dark">Form Input Insiden Baru</h3><small class="text-muted">Isi seluruh parameter laporan insiden di bawah ini secara akurat</small></div>
+    <div class="d-flex justify-content-between align-items-center mb-4 pb-3 border-bottom"><div class="d-flex align-items-center gap-3"><button type="button" class="btn btn-outline-danger border-0 p-2 fs-4" onclick="toggleSidebar()"><i class="bi bi-list"></i></button><div><h3 class="fw-bold mb-0 text-dark">Form Input Insiden Baru</h3><small class="text-muted">Isi seluruh parameter laporan insiden di bawah ini secara akurat</small></div></div></div>
+    <div id="masterDataStatus" class="alert alert-info d-flex align-items-center gap-2 mb-3"><span class="spinner-border spinner-border-sm"></span><span>Memuat Master Data...</span></div>
+    <form id="formIncident"><div class="glass-card">
+      <div class="section-title"><i class="bi bi-clock-history me-2"></i>1. Informasi Utama & Waktu Kejadian</div>
+      <div class="row g-3 mb-4">
+        <div class="col-md-4"><label class="form-label fw-bold">Site / Business Unit (BU) *</label><? if (String(userRole).toLowerCase() === 'admin') { ?><select id="in_site" class="form-select" required></select><? } else { ?><input type="text" id="in_site" class="form-control bg-light" value="<?= userSite ?>" readonly><? } ?></div>
+        <div class="col-md-4"><label class="form-label fw-bold">Tanggal Kejadian *</label><input type="date" id="in_tgl" class="form-control" required></div><div class="col-md-2"><label class="form-label fw-bold">Hari</label><input type="text" id="in_hari" class="form-control bg-light" readonly placeholder="Otomatis"></div><div class="col-md-2"><label class="form-label fw-bold">Bulan</label><input type="text" id="in_bulan" class="form-control bg-light" readonly placeholder="Otomatis"></div>
+        <div class="col-md-4"><label class="form-label fw-bold">Jam Kejadian *</label><select id="in_jam" class="form-select" required></select></div><div class="col-md-4"><label class="form-label fw-bold">Shift Kerja *</label><select id="in_shift" class="form-select" required><option value="">-- Pilih Shift --</option><option value="Shift 1 (Siang)">Shift 1 (Siang)</option><option value="Shift 2 (Malam)">Shift 2 (Malam)</option></select></div><div class="col-md-4"><label class="form-label fw-bold">Lokasi Spesifik *</label><select id="in_lokasi" class="form-select" required></select></div>
       </div>
-    </div>
-
-    <div id="masterDataStatus" class="alert alert-info d-flex align-items-center gap-2 mb-3">
-      <span class="spinner-border spinner-border-sm"></span><span>Memuat Master Data...</span>
-    </div>
-
-    <form id="formIncident">
-      <div class="glass-card">
-        <div class="section-title"><i class="bi bi-clock-history me-2"></i>1. Informasi Utama & Waktu Kejadian</div>
-        <div class="row g-3 mb-4">
-          <div class="col-md-4"><label class="form-label fw-bold">Site / Business Unit (BU) *</label>
-            <? if (String(userRole).toLowerCase() === 'admin') { ?><select id="in_site" class="form-select" required></select><? } else { ?><input type="text" id="in_site" class="form-control bg-light" value="<?= userSite ?>" readonly><? } ?>
-          </div>
-          <div class="col-md-4"><label class="form-label fw-bold">Tanggal Kejadian *</label><input type="date" id="in_tgl" class="form-control" required></div>
-          <div class="col-md-2"><label class="form-label fw-bold">Hari</label><input type="text" id="in_hari" class="form-control bg-light" readonly placeholder="Otomatis"></div>
-          <div class="col-md-2"><label class="form-label fw-bold">Bulan</label><input type="text" id="in_bulan" class="form-control bg-light" readonly placeholder="Otomatis"></div>
-          <div class="col-md-4"><label class="form-label fw-bold">Jam Kejadian *</label><select id="in_jam" class="form-select" required></select></div>
-          <div class="col-md-4"><label class="form-label fw-bold">Shift Kerja *</label><select id="in_shift" class="form-select" required><option value="">-- Pilih Shift --</option><option value="Shift 1 (Siang)">Shift 1 (Siang)</option><option value="Shift 2 (Malam)">Shift 2 (Malam)</option></select></div>
-          <div class="col-md-4"><label class="form-label fw-bold">Lokasi Spesifik *</label><select id="in_lokasi" class="form-select" required></select></div>
-        </div>
-
-        <div class="section-title d-flex justify-content-between align-items-center"><span><i class="bi bi-person-badge me-2"></i>2. Entitas Perusahaan & Karyawan Terlibat</span><button type="button" id="btnAddEmp" class="btn btn-sm btn-outline-danger fw-bold"><i class="bi bi-person-plus me-1"></i>Tambah Karyawan (+)</button></div>
-        <div id="employeeListContainer" class="mb-4"></div>
-
-        <div class="section-title"><i class="bi bi-journal-text me-2"></i>3. Kronologis & Peralatan Terlibat</div>
-        <div class="row g-3 mb-4">
-          <div class="col-12"><label class="form-label fw-bold">Uraian Kronologis Kejadian *</label><textarea id="in_kronologis" class="form-control" rows="4" required></textarea></div>
-          <div class="col-md-4"><label class="form-label fw-bold">Kategori Alat Terlibat</label><select id="in_alatTerlibat" class="form-select"></select></div>
-          <div class="col-md-4"><label class="form-label fw-bold">Jenis Alat</label><select id="in_jenisAlat" class="form-select"></select></div>
-          <div class="col-md-4"><label class="form-label fw-bold">Estimasi Loss Cost ($ / Rp)</label><input type="number" id="in_lossCost" class="form-control" placeholder="0"></div>
-          <div class="col-md-6"><label class="form-label fw-bold">Jenis Kontak</label><select id="in_jenisKontak" class="form-select"></select></div>
-          <div class="col-md-6"><label class="form-label fw-bold">Sumber Kecelakaan</label><select id="in_sumberKecelakaan" class="form-select"></select></div>
-        </div>
-
-        <div class="section-title"><i class="bi bi-search me-2"></i>4. Analisis Penyebab</div>
-        <div class="row g-3 mb-4">
-          <div class="col-md-6"><label class="form-label fw-bold">Tindakan Tidak Aman (TTA)</label><select id="in_tta" class="form-select"></select></div>
-          <div class="col-md-6"><label class="form-label fw-bold">Keterangan TTA</label><select id="in_ketTta" class="form-select"></select></div>
-          <div class="col-md-6"><label class="form-label fw-bold">Kondisi Tidak Aman (KTA)</label><select id="in_kta" class="form-select"></select></div>
-          <div class="col-md-6"><label class="form-label fw-bold">Keterangan KTA</label><select id="in_ketKta" class="form-select"></select></div>
-          <div class="col-md-6"><label class="form-label fw-bold">Faktor Manusia</label><select id="in_faktorManusia" class="form-select"></select></div>
-          <div class="col-md-6"><label class="form-label fw-bold">Keterangan Faktor Manusia</label><select id="in_ketManusia" class="form-select"></select></div>
-          <div class="col-md-6"><label class="form-label fw-bold">Faktor Pekerjaan</label><select id="in_faktorPekerjaan" class="form-select"></select></div>
-          <div class="col-md-6"><label class="form-label fw-bold">Keterangan Faktor Pekerjaan</label><select id="in_ketPekerjaan" class="form-select"></select></div>
-          <div class="col-md-6"><label class="form-label fw-bold">Kurang Kendali Manajemen</label><select id="in_kurangKendali" class="form-select"></select></div>
-          <div class="col-md-6"><label class="form-label fw-bold">Keterangan Kurang Kendali</label><select id="in_ketKendali" class="form-select"></select></div>
-        </div>
-
-        <div class="section-title"><i class="bi bi-shield-check me-2"></i>5. Tindakan Perbaikan, Pencegahan, & Target Due Date</div>
-        <div class="row g-3 mb-4"><div class="col-md-6"><label class="form-label fw-bold">Tindakan Perbaikan</label><textarea id="in_tindakanPerbaikan" class="form-control" rows="3"></textarea></div><div class="col-md-6"><label class="form-label fw-bold">Tindakan Pencegahan</label><textarea id="in_tindakanPencegahan" class="form-control" rows="3"></textarea></div><div class="col-12"><label class="form-label fw-bold">Target Due Date CAPA</label><input type="date" id="in_dueDate" class="form-control"></div></div>
-
-        <div class="section-title d-flex justify-content-between align-items-center"><span><i class="bi bi-images me-2"></i>6. Upload Foto / Lampiran Media Awal</span><button type="button" id="btnAddAttach" class="btn btn-sm btn-outline-danger fw-bold"><i class="bi bi-plus-circle me-1"></i>Tambah Lampiran (+)</button></div>
-        <div id="attachmentListContainer" class="mb-4"></div>
-        <div class="d-flex justify-content-between align-items-center pt-3 border-top"><a href="<?= scriptUrl ?>?token=<?= token ?>&page=IncidentList" class="btn btn-outline-secondary fw-bold">Batal / Kembali</a><button type="submit" id="btnSubmit" class="btn btn-sinarmas"><i class="bi bi-send-check me-2"></i>Kirim Laporan Insiden</button></div>
-      </div>
-    </form>
+      <div class="section-title d-flex justify-content-between align-items-center"><span><i class="bi bi-person-badge me-2"></i>2. Entitas Perusahaan & Karyawan Terlibat</span><button type="button" id="btnAddEmp" class="btn btn-sm btn-outline-danger fw-bold"><i class="bi bi-person-plus me-1"></i>Tambah Karyawan (+)</button></div><div id="employeeListContainer" class="mb-4"></div>
+      <div class="section-title"><i class="bi bi-journal-text me-2"></i>3. Kronologis & Peralatan Terlibat</div><div class="row g-3 mb-4"><div class="col-12"><label class="form-label fw-bold">Uraian Kronologis Kejadian *</label><textarea id="in_kronologis" class="form-control" rows="4" required></textarea></div><div class="col-md-4"><label class="form-label fw-bold">Kategori Alat Terlibat</label><select id="in_alatTerlibat" class="form-select"></select></div><div class="col-md-4"><label class="form-label fw-bold">Jenis Alat</label><select id="in_jenisAlat" class="form-select"></select></div><div class="col-md-4"><label class="form-label fw-bold">Estimasi Loss Cost ($ / Rp)</label><input type="number" id="in_lossCost" class="form-control" placeholder="0"></div><div class="col-md-6"><label class="form-label fw-bold">Jenis Kontak</label><select id="in_jenisKontak" class="form-select"></select></div><div class="col-md-6"><label class="form-label fw-bold">Sumber Kecelakaan</label><select id="in_sumberKecelakaan" class="form-select"></select></div></div>
+      <div class="section-title"><i class="bi bi-search me-2"></i>4. Analisis Penyebab</div><div class="row g-3 mb-4"><div class="col-md-6"><label class="form-label fw-bold">Tindakan Tidak Aman (TTA)</label><select id="in_tta" class="form-select"></select></div><div class="col-md-6"><label class="form-label fw-bold">Keterangan TTA</label><select id="in_ketTta" class="form-select"></select></div><div class="col-md-6"><label class="form-label fw-bold">Kondisi Tidak Aman (KTA)</label><select id="in_kta" class="form-select"></select></div><div class="col-md-6"><label class="form-label fw-bold">Keterangan KTA</label><select id="in_ketKta" class="form-select"></select></div><div class="col-md-6"><label class="form-label fw-bold">Faktor Manusia</label><select id="in_faktorManusia" class="form-select"></select></div><div class="col-md-6"><label class="form-label fw-bold">Keterangan Faktor Manusia</label><select id="in_ketManusia" class="form-select"></select></div><div class="col-md-6"><label class="form-label fw-bold">Faktor Pekerjaan</label><select id="in_faktorPekerjaan" class="form-select"></select></div><div class="col-md-6"><label class="form-label fw-bold">Keterangan Faktor Pekerjaan</label><select id="in_ketPekerjaan" class="form-select"></select></div><div class="col-md-6"><label class="form-label fw-bold">Kurang Kendali Manajemen</label><select id="in_kurangKendali" class="form-select"></select></div><div class="col-md-6"><label class="form-label fw-bold">Keterangan Kurang Kendali</label><select id="in_ketKendali" class="form-select"></select></div></div>
+      <div class="section-title"><i class="bi bi-shield-check me-2"></i>5. Tindakan Perbaikan, Pencegahan, & Target Due Date</div><div class="row g-3 mb-4"><div class="col-md-6"><label class="form-label fw-bold">Tindakan Perbaikan</label><textarea id="in_tindakanPerbaikan" class="form-control" rows="3"></textarea></div><div class="col-md-6"><label class="form-label fw-bold">Tindakan Pencegahan</label><textarea id="in_tindakanPencegahan" class="form-control" rows="3"></textarea></div><div class="col-12"><label class="form-label fw-bold">Target Due Date CAPA</label><input type="date" id="in_dueDate" class="form-control"></div></div>
+      <div class="section-title d-flex justify-content-between align-items-center"><span><i class="bi bi-images me-2"></i>6. Upload Foto / Lampiran Media Awal</span><button type="button" id="btnAddAttach" class="btn btn-sm btn-outline-danger fw-bold"><i class="bi bi-plus-circle me-1"></i>Tambah Lampiran (+)</button></div><div id="attachmentListContainer" class="mb-4"></div><div class="d-flex justify-content-between align-items-center pt-3 border-top"><a href="<?= scriptUrl ?>?token=<?= token ?>&page=IncidentList" class="btn btn-outline-secondary fw-bold">Batal / Kembali</a><button type="submit" id="btnSubmit" class="btn btn-sinarmas"><i class="bi bi-send-check me-2"></i>Kirim Laporan Insiden</button></div>
+    </div></form>
   </div>
+
+  <div id="successModal" class="success-modal-backdrop" aria-hidden="true"><div class="success-modal"><div class="success-icon"><i class="bi bi-check-lg"></i></div><h4>Laporan Insiden Berhasil Disimpan!</h4><div class="subtitle">Data laporan dan lampiran telah berhasil dicatat ke dalam sistem.</div><div class="success-info"><div class="success-info-row"><span>Nomor Insiden:</span><strong id="successIncidentNo">-</strong></div><div class="success-info-row"><span>Berkas Lampiran:</span><strong id="successAttachmentCount">0 dari 0 file</strong></div></div><div class="countdown-box"><i class="bi bi-arrow-repeat me-1"></i><span>Mengalihkan ke Data Laporan dalam <strong id="successCountdown">3</strong> detik...</span></div><button type="button" id="btnOpenList" class="btn-list-now">Buka Data Laporan Sekarang <i class="bi bi-arrow-right ms-1"></i></button></div></div>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script>
 (function(){
   const TOKEN="<?= token ?>", USER_ROLE="<?= userRole ?>", SCRIPT_URL="<?= scriptUrl ?>";
-  let masterCache=null, employeeCount=0, attachmentCount=0;
+  let masterCache=null, employeeCount=0, attachmentCount=0, countdownTimer=null;
+  const listUrl=()=>SCRIPT_URL+'?token='+encodeURIComponent(TOKEN)+'&page=IncidentList';
+  function populateSelect(el,items){if(!el)return;el.innerHTML='<option value="">-- Pilih --</option>';if(!Array.isArray(items))return;items.forEach(v=>{if(v===null||v===undefined||String(v).trim()==='')return;const o=document.createElement('option');o.value=String(v);o.textContent=String(v);el.appendChild(o);});}
+  function byId(id,items){populateSelect(document.getElementById(id),items)}
+  function populateAll(){if(!masterCache)return;byId('in_jam',masterCache.jam);byId('in_lokasi',masterCache.lokasi);if(String(USER_ROLE).toLowerCase()==='admin')byId('in_site',masterCache.site);byId('in_alatTerlibat',masterCache.kategoriAlat);byId('in_jenisAlat',masterCache.jenisAlat);byId('in_jenisKontak',masterCache.jenisKontak);byId('in_sumberKecelakaan',masterCache.sumberKecelakaan);byId('in_tta',masterCache.tta);byId('in_ketTta',masterCache.ketTta);byId('in_kta',masterCache.kta);byId('in_ketKta',masterCache.ketKta);byId('in_faktorManusia',masterCache.faktorManusia);byId('in_ketManusia',masterCache.ketFaktorManusia);byId('in_faktorPekerjaan',masterCache.faktorPekerjaan);byId('in_ketPekerjaan',masterCache.ketFaktorPekerjaan);byId('in_kurangKendali',masterCache.kurangKendali);byId('in_ketKendali',masterCache.ketKurangKendali)}
+  function renumberEmployees(){document.querySelectorAll('#employeeListContainer .emp-card').forEach((card,index)=>{const n=card.querySelector('.emp-number');if(n)n.textContent='Karyawan Terlibat #'+(index+1)})}
+  function createEmployeeRow(){if(!masterCache){alert('Master Data masih dimuat. Silakan tunggu sebentar.');return}employeeCount++;const c=document.getElementById('employeeListContainer');if(!c)return;const d=document.createElement('div');d.className='card p-3 mb-3 border border-light-subtle shadow-sm rounded-3 emp-card';d.innerHTML=`<div class="d-flex justify-content-between align-items-center mb-2 pb-2 border-bottom"><span class="emp-number">Karyawan Terlibat #${employeeCount}</span>${employeeCount>1?'<button type="button" class="btn btn-outline-danger btn-sm btn-del-emp"><i class="bi bi-trash me-1"></i>Hapus</button>':''}</div><div class="row g-3"><div class="col-md-4"><label class="form-label fw-bold small">Perusahaan *</label><select class="form-select emp-perusahaan" required></select></div><div class="col-md-4"><label class="form-label fw-bold small">Departemen *</label><select class="form-select emp-departemen" required></select></div><div class="col-md-4"><label class="form-label fw-bold small">Klasifikasi Kecelakaan *</label><select class="form-select emp-klasifikasi" required></select></div><div class="col-md-4"><label class="form-label fw-bold small">Nama Karyawan Terlibat</label><input type="text" class="form-control emp-karyawan" placeholder="Nama korban/karyawan"></div><div class="col-md-4"><label class="form-label fw-bold small">Jabatan</label><select class="form-select emp-jabatan"></select></div><div class="col-md-2"><label class="form-label fw-bold small">Umur</label><select class="form-select emp-umur"></select></div><div class="col-md-2"><label class="form-label fw-bold small">Masa Kerja</label><select class="form-select emp-masaKerja"></select></div></div>`;c.appendChild(d);const del=d.querySelector('.btn-del-emp');if(del)del.addEventListener('click',function(){d.remove();employeeCount=Math.max(0,employeeCount-1);renumberEmployees()});populateSelect(d.querySelector('.emp-perusahaan'),masterCache.perusahaan);populateSelect(d.querySelector('.emp-departemen'),masterCache.departemen);populateSelect(d.querySelector('.emp-klasifikasi'),masterCache.klasifikasi);populateSelect(d.querySelector('.emp-jabatan'),masterCache.jabatan);populateSelect(d.querySelector('.emp-umur'),masterCache.umur);populateSelect(d.querySelector('.emp-masaKerja'),masterCache.masaKerja);d.scrollIntoView({behavior:'smooth',block:'center'})}
 
-  function populateSelect(el, items){
-    if(!el) return;
-    el.innerHTML='<option value="">-- Pilih --</option>';
-    if(!Array.isArray(items)) return;
-    items.forEach(v=>{
-      if(v===null||v===undefined||String(v).trim()==='') return;
-      const o=document.createElement('option'); o.value=String(v); o.textContent=String(v); el.appendChild(o);
-    });
+  function renderAttachmentPreview(row,file){
+    const preview=row.querySelector('.attachment-preview');if(!preview)return;
+    preview.innerHTML='';preview.classList.remove('show');if(!file)return;
+    const meta=document.createElement('div');meta.className='file-meta';meta.innerHTML='<i class="bi bi-file-earmark me-1"></i>'+file.name+' &middot; '+formatBytes(file.size);
+    if(file.type.startsWith('image/')){const img=document.createElement('img');img.alt='Preview '+file.name;const url=URL.createObjectURL(file);img.onload=()=>URL.revokeObjectURL(url);img.src=url;preview.appendChild(img)}else{const box=document.createElement('div');box.className='p-4 text-center text-muted';box.innerHTML='<i class="bi bi-file-earmark-pdf fs-1 d-block mb-2 text-danger"></i>Preview tersedia untuk gambar. File dokumen siap diunggah.';preview.appendChild(box)}
+    preview.appendChild(meta);preview.classList.add('show');
   }
-  function byId(id,items){populateSelect(document.getElementById(id),items);}
-  function populateAll(){
-    if(!masterCache) return;
-    byId('in_jam',masterCache.jam); byId('in_lokasi',masterCache.lokasi);
-    if(String(USER_ROLE).toLowerCase()==='admin') byId('in_site',masterCache.site);
-    byId('in_alatTerlibat',masterCache.kategoriAlat); byId('in_jenisAlat',masterCache.jenisAlat); byId('in_jenisKontak',masterCache.jenisKontak); byId('in_sumberKecelakaan',masterCache.sumberKecelakaan);
-    byId('in_tta',masterCache.tta); byId('in_ketTta',masterCache.ketTta); byId('in_kta',masterCache.kta); byId('in_ketKta',masterCache.ketKta);
-    byId('in_faktorManusia',masterCache.faktorManusia); byId('in_ketManusia',masterCache.ketFaktorManusia); byId('in_faktorPekerjaan',masterCache.faktorPekerjaan); byId('in_ketPekerjaan',masterCache.ketFaktorPekerjaan); byId('in_kurangKendali',masterCache.kurangKendali); byId('in_ketKendali',masterCache.ketKurangKendali);
-  }
-  function renumberEmployees(){
-    document.querySelectorAll('#employeeListContainer .emp-card').forEach((card,index)=>{
-      const n=card.querySelector('.emp-number');
-      if(n) n.textContent='Karyawan Terlibat #'+(index+1);
-    });
-  }
-  function createEmployeeRow(){
-    if(!masterCache){ alert('Master Data masih dimuat. Silakan tunggu sebentar.'); return; }
-    employeeCount++;
-    const c=document.getElementById('employeeListContainer');
-    if(!c) return;
-    const d=document.createElement('div');
-    d.className='card p-3 mb-3 border border-light-subtle shadow-sm rounded-3 emp-card';
-    d.innerHTML=`<div class="d-flex justify-content-between align-items-center mb-2 pb-2 border-bottom"><span class="emp-number">Karyawan Terlibat #${employeeCount}</span>${employeeCount>1?'<button type="button" class="btn btn-outline-danger btn-sm btn-del-emp"><i class="bi bi-trash me-1"></i>Hapus</button>':''}</div><div class="row g-3"><div class="col-md-4"><label class="form-label fw-bold small">Perusahaan *</label><select class="form-select emp-perusahaan" required></select></div><div class="col-md-4"><label class="form-label fw-bold small">Departemen *</label><select class="form-select emp-departemen" required></select></div><div class="col-md-4"><label class="form-label fw-bold small">Klasifikasi Kecelakaan *</label><select class="form-select emp-klasifikasi" required></select></div><div class="col-md-4"><label class="form-label fw-bold small">Nama Karyawan Terlibat</label><input type="text" class="form-control emp-karyawan" placeholder="Nama korban/karyawan"></div><div class="col-md-4"><label class="form-label fw-bold small">Jabatan</label><select class="form-select emp-jabatan"></select></div><div class="col-md-2"><label class="form-label fw-bold small">Umur</label><select class="form-select emp-umur"></select></div><div class="col-md-2"><label class="form-label fw-bold small">Masa Kerja</label><select class="form-select emp-masaKerja"></select></div></div>`;
-    c.appendChild(d);
-    const del=d.querySelector('.btn-del-emp');
-    if(del) del.addEventListener('click',function(){ d.remove(); employeeCount=Math.max(0,employeeCount-1); renumberEmployees(); });
-    populateSelect(d.querySelector('.emp-perusahaan'),masterCache.perusahaan);
-    populateSelect(d.querySelector('.emp-departemen'),masterCache.departemen);
-    populateSelect(d.querySelector('.emp-klasifikasi'),masterCache.klasifikasi);
-    populateSelect(d.querySelector('.emp-jabatan'),masterCache.jabatan);
-    populateSelect(d.querySelector('.emp-umur'),masterCache.umur);
-    populateSelect(d.querySelector('.emp-masaKerja'),masterCache.masaKerja);
-    d.scrollIntoView({behavior:'smooth',block:'center'});
-  }
-  function createAttachmentRow(){
-    attachmentCount++;
-    const c=document.getElementById('attachmentListContainer'); if(!c)return;
-    const d=document.createElement('div'); d.className='card p-3 mb-3';
-    d.innerHTML=`<div class="row g-3 align-items-center"><div class="col-md-5"><label class="form-label fw-bold small">File #${attachmentCount}</label><input type="file" class="form-control file-input-item" accept="image/*,application/pdf"></div><div class="col-md-5"><label class="form-label fw-bold small">Tipe</label><select class="form-select file-type-item"><option value="Foto Kejadian Awal">Foto Kejadian Awal</option><option value="Foto Kerusakan Unit">Foto Kerusakan Unit</option><option value="Foto Sketsa / Peta">Foto Sketsa / Peta</option><option value="Dokumen BAP / Kronologis">Dokumen BAP / Kronologis</option><option value="Lampiran Lainnya">Lampiran Lainnya</option></select></div><div class="col-md-2"><button type="button" class="btn btn-outline-danger btn-sm w-100 btn-del-attach">Hapus</button></div></div>`;
-    c.appendChild(d); d.querySelector('.btn-del-attach').onclick=()=>d.remove();
-  }
-  function fileToBase64(file){
-    return new Promise((resolve,reject)=>{const reader=new FileReader();reader.onload=()=>{const raw=reader.result;resolve(raw.includes(',')?raw.split(',')[1]:raw)};reader.onerror=reject;reader.readAsDataURL(file);});
-  }
-  function collectFormData(){
-    const karyawanList=[];
-    document.querySelectorAll('#employeeListContainer .emp-card').forEach(card=>{
-      karyawanList.push({
-        perusahaan:card.querySelector('.emp-perusahaan')?.value||'',
-        departemen:card.querySelector('.emp-departemen')?.value||'',
-        klasifikasi:card.querySelector('.emp-klasifikasi')?.value||'',
-        karyawan:card.querySelector('.emp-karyawan')?.value||'',
-        jabatan:card.querySelector('.emp-jabatan')?.value||'',
-        umur:card.querySelector('.emp-umur')?.value||'',
-        masaKerja:card.querySelector('.emp-masaKerja')?.value||''
-      });
-    });
-    return {
-      site:document.getElementById('in_site').value,
-      tglKejadian:document.getElementById('in_tgl').value,
-      hari:document.getElementById('in_hari').value,
-      bulan:document.getElementById('in_bulan').value,
-      jamKejadian:document.getElementById('in_jam').value,
-      shift:document.getElementById('in_shift').value,
-      lokasi:document.getElementById('in_lokasi').value,
-      kronologis:document.getElementById('in_kronologis').value,
-      alatTerlibat:document.getElementById('in_alatTerlibat').value,
-      jenisAlat:document.getElementById('in_jenisAlat').value,
-      lossCost:document.getElementById('in_lossCost').value,
-      jenisKontak:document.getElementById('in_jenisKontak').value,
-      sumberKecelakaan:document.getElementById('in_sumberKecelakaan').value,
-      tta:document.getElementById('in_tta').value,
-      ketTta:document.getElementById('in_ketTta').value,
-      kta:document.getElementById('in_kta').value,
-      ketKta:document.getElementById('in_ketKta').value,
-      faktorManusia:document.getElementById('in_faktorManusia').value,
-      ketManusia:document.getElementById('in_ketManusia').value,
-      faktorPekerjaan:document.getElementById('in_faktorPekerjaan').value,
-      ketPekerjaan:document.getElementById('in_ketPekerjaan').value,
-      kurangKendali:document.getElementById('in_kurangKendali').value,
-      ketKendali:document.getElementById('in_ketKendali').value,
-      tindakanPerbaikan:document.getElementById('in_tindakanPerbaikan').value,
-      tindakanPencegahan:document.getElementById('in_tindakanPencegahan').value,
-      dueDate:document.getElementById('in_dueDate').value,
-      karyawanList:karyawanList
-    };
-  }
-  async function submitIncident(e){
-    e.preventDefault();
-    const btn=document.getElementById('btnSubmit');
-    const cards=document.querySelectorAll('#employeeListContainer .emp-card');
-    if(cards.length===0){alert('Tambahkan minimal 1 karyawan terlibat.');return;}
-    if(!document.getElementById('formIncident').checkValidity()){document.getElementById('formIncident').reportValidity();return;}
-    btn.disabled=true; btn.innerHTML='<span class="spinner-border spinner-border-sm me-2"></span>Menyimpan Laporan...';
-    const formData=collectFormData();
-    console.log('KARYAWAN YANG DIKIRIM:',formData.karyawanList);
-    google.script.run.withSuccessHandler(async function(res){
-      if(!res||!res.success){alert('Gagal menyimpan laporan: '+(res?.message||'Error'));btn.disabled=false;btn.innerHTML='<i class="bi bi-send-check me-2"></i>Kirim Laporan Insiden';return;}
-      const rows=[...document.querySelectorAll('#attachmentListContainer .card')];
-      let uploaded=0, failed=0;
-      for(const row of rows){
-        const input=row.querySelector('.file-input-item');
-        const type=row.querySelector('.file-type-item')?.value||'Foto Kejadian Awal';
-        if(!input?.files?.[0]) continue;
-        try{
-          btn.innerHTML='<span class="spinner-border spinner-border-sm me-2"></span>Mengunggah Lampiran...';
-          const file=input.files[0], b64=await fileToBase64(file);
-          const up=await new Promise((resolve,reject)=>google.script.run.withSuccessHandler(resolve).withFailureHandler(reject).uploadAttachment(TOKEN,res.noInsiden,{fileName:file.name,mimeType:file.type,bytes:b64},type));
-          if(up?.success)uploaded++;else failed++;
-        }catch(err){failed++;}
-      }
-      alert('Laporan berhasil disimpan. Nomor Insiden: '+res.noInsiden+(failed?'\nLampiran gagal: '+failed:''));
-      window.top.location.href=SCRIPT_URL+'?token='+TOKEN+'&page=IncidentList';
-    }).withFailureHandler(function(err){alert('Error Server: '+(err?.message||err));btn.disabled=false;btn.innerHTML='<i class="bi bi-send-check me-2"></i>Kirim Laporan Insiden';}).saveIncidentReport(TOKEN,formData);
-  }
+  function formatBytes(bytes){if(!bytes)return'0 B';const units=['B','KB','MB','GB'];const i=Math.min(Math.floor(Math.log(bytes)/Math.log(1024)),units.length-1);return(bytes/Math.pow(1024,i)).toFixed(i?1:0)+' '+units[i]}
+  function createAttachmentRow(){attachmentCount++;const c=document.getElementById('attachmentListContainer');if(!c)return;const d=document.createElement('div');d.className='card p-3 mb-3 attachment-card';d.innerHTML=`<div class="row g-3 align-items-start"><div class="col-md-5"><label class="form-label fw-bold small">File #${attachmentCount}</label><input type="file" class="form-control file-input-item" accept="image/*,application/pdf"><div class="attachment-preview"></div></div><div class="col-md-5"><label class="form-label fw-bold small">Tipe</label><select class="form-select file-type-item"><option value="Foto Kejadian Awal">Foto Kejadian Awal</option><option value="Foto Kerusakan Unit">Foto Kerusakan Unit</option><option value="Foto Sketsa / Peta">Foto Sketsa / Peta</option><option value="Dokumen BAP / Kronologis">Dokumen BAP / Kronologis</option><option value="Lampiran Lainnya">Lampiran Lainnya</option></select></div><div class="col-md-2"><button type="button" class="btn btn-outline-danger btn-sm w-100 btn-del-attach"><i class="bi bi-trash me-1"></i>Hapus</button></div></div>`;c.appendChild(d);d.querySelector('.file-input-item').addEventListener('change',function(){renderAttachmentPreview(d,this.files&&this.files[0])});d.querySelector('.btn-del-attach').onclick=()=>{d.remove();relabelAttachments()}}
+  function relabelAttachments(){document.querySelectorAll('#attachmentListContainer .attachment-card').forEach((card,index)=>{const label=card.querySelector('.form-label');if(label)label.textContent='File #'+(index+1)})}
+  function fileToBase64(file){return new Promise((resolve,reject)=>{const reader=new FileReader();reader.onload=()=>{const raw=reader.result;resolve(raw.includes(',')?raw.split(',')[1]:raw)};reader.onerror=reject;reader.readAsDataURL(file)})}
+  function collectFormData(){const karyawanList=[];document.querySelectorAll('#employeeListContainer .emp-card').forEach(card=>{karyawanList.push({perusahaan:card.querySelector('.emp-perusahaan')?.value||'',departemen:card.querySelector('.emp-departemen')?.value||'',klasifikasi:card.querySelector('.emp-klasifikasi')?.value||'',karyawan:card.querySelector('.emp-karyawan')?.value||'',jabatan:card.querySelector('.emp-jabatan')?.value||'',umur:card.querySelector('.emp-umur')?.value||'',masaKerja:card.querySelector('.emp-masaKerja')?.value||''})});return{site:document.getElementById('in_site').value,tglKejadian:document.getElementById('in_tgl').value,hari:document.getElementById('in_hari').value,bulan:document.getElementById('in_bulan').value,jamKejadian:document.getElementById('in_jam').value,shift:document.getElementById('in_shift').value,lokasi:document.getElementById('in_lokasi').value,kronologis:document.getElementById('in_kronologis').value,alatTerlibat:document.getElementById('in_alatTerlibat').value,jenisAlat:document.getElementById('in_jenisAlat').value,lossCost:document.getElementById('in_lossCost').value,jenisKontak:document.getElementById('in_jenisKontak').value,sumberKecelakaan:document.getElementById('in_sumberKecelakaan').value,tta:document.getElementById('in_tta').value,ketTta:document.getElementById('in_ketTta').value,kta:document.getElementById('in_kta').value,ketKta:document.getElementById('in_ketKta').value,faktorManusia:document.getElementById('in_faktorManusia').value,ketManusia:document.getElementById('in_ketManusia').value,faktorPekerjaan:document.getElementById('in_faktorPekerjaan').value,ketPekerjaan:document.getElementById('in_ketPekerjaan').value,kurangKendali:document.getElementById('in_kurangKendali').value,ketKendali:document.getElementById('in_ketKendali').value,tindakanPerbaikan:document.getElementById('in_tindakanPerbaikan').value,tindakanPencegahan:document.getElementById('in_tindakanPencegahan').value,dueDate:document.getElementById('in_dueDate').value,karyawanList:karyawanList}}
 
-  document.addEventListener('DOMContentLoaded',function(){
-    const addEmp=document.getElementById('btnAddEmp');
-    const addAttach=document.getElementById('btnAddAttach');
-    if(addEmp) addEmp.addEventListener('click',createEmployeeRow);
-    if(addAttach) addAttach.addEventListener('click',createAttachmentRow);
-    const form=document.getElementById('formIncident');
-    if(form) form.addEventListener('submit',submitIncident);
-    createAttachmentRow();
-    document.getElementById('in_tgl').addEventListener('change',function(){if(!this.value)return;const x=new Date(this.value),days=['Minggu','Senin','Selasa','Rabu','Kamis','Jumat','Sabtu'],months=['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];document.getElementById('in_hari').value=days[x.getDay()];document.getElementById('in_bulan').value=months[x.getMonth()];});
-    google.script.run.withSuccessHandler(function(res){
-      console.log('MASTER DATA RESPONSE:',res);
-      if(res&&res.success&&res.master){
-        masterCache=res.master; populateAll(); createEmployeeRow();
-        const status=document.getElementById('masterDataStatus'); status.className='alert alert-success'; status.innerHTML='<i class="bi bi-check-circle-fill"></i><span>Master Data berhasil dimuat.</span>';
-      }else{
-        const msg=res?.message||'Response Master Data kosong'; const status=document.getElementById('masterDataStatus'); status.className='alert alert-danger'; status.innerHTML='<i class="bi bi-exclamation-triangle-fill"></i><span>'+msg+'</span>'; console.error('MASTER DATA ERROR:',msg);
-      }
-    }).withFailureHandler(function(err){const msg=err?.message||String(err);const status=document.getElementById('masterDataStatus');status.className='alert alert-danger';status.innerHTML='<i class="bi bi-exclamation-triangle-fill"></i><span>Gagal memuat Master Data: '+msg+'</span>';console.error('MASTER DATA FAILURE:',err);}).getFormMasterData(TOKEN);
-  });
+  function showSuccessModal(noInsiden,uploaded,total,failed){document.getElementById('successIncidentNo').textContent=noInsiden||'-';document.getElementById('successAttachmentCount').textContent=uploaded+' dari '+total+' file terupload'+(failed?' ('+failed+' gagal)':'');const modal=document.getElementById('successModal');modal.classList.add('show');modal.setAttribute('aria-hidden','false');let seconds=3;document.getElementById('successCountdown').textContent=seconds;clearInterval(countdownTimer);countdownTimer=setInterval(()=>{seconds--;document.getElementById('successCountdown').textContent=Math.max(seconds,0);if(seconds<=0){clearInterval(countdownTimer);window.top.location.href=listUrl()}},1000)}
+  function submitIncident(e){e.preventDefault();const btn=document.getElementById('btnSubmit');const cards=document.querySelectorAll('#employeeListContainer .emp-card');if(cards.length===0){alert('Tambahkan minimal 1 karyawan terlibat.');return}if(!document.getElementById('formIncident').checkValidity()){document.getElementById('formIncident').reportValidity();return}btn.disabled=true;btn.innerHTML='<span class="spinner-border spinner-border-sm me-2"></span>Menyimpan Laporan...';const formData=collectFormData();const rows=[...document.querySelectorAll('#attachmentListContainer .attachment-card')];const files=rows.map(row=>({row,file:row.querySelector('.file-input-item')?.files?.[0],type:row.querySelector('.file-type-item')?.value||'Foto Kejadian Awal'})).filter(x=>x.file);google.script.run.withSuccessHandler(async function(res){if(!res||!res.success){alert('Gagal menyimpan laporan: '+(res?.message||'Error'));btn.disabled=false;btn.innerHTML='<i class="bi bi-send-check me-2"></i>Kirim Laporan Insiden';return}let uploaded=0,failed=0;for(const item of files){try{btn.innerHTML='<span class="spinner-border spinner-border-sm me-2"></span>Mengunggah Lampiran ('+(uploaded+failed+1)+'/'+files.length+')...';const b64=await fileToBase64(item.file);const up=await new Promise((resolve,reject)=>google.script.run.withSuccessHandler(resolve).withFailureHandler(reject).uploadAttachment(TOKEN,res.noInsiden,{fileName:item.file.name,mimeType:item.file.type,bytes:b64},item.type));if(up?.success)uploaded++;else failed++}catch(err){console.error('Upload lampiran gagal:',err);failed++}}btn.disabled=false;btn.innerHTML='<i class="bi bi-send-check me-2"></i>Kirim Laporan Insiden';showSuccessModal(res.noInsiden,uploaded,files.length,failed)}).withFailureHandler(function(err){alert('Error Server: '+(err?.message||err));btn.disabled=false;btn.innerHTML='<i class="bi bi-send-check me-2"></i>Kirim Laporan Insiden'}).saveIncidentReport(TOKEN,formData)}
+
+  document.addEventListener('DOMContentLoaded',function(){const addEmp=document.getElementById('btnAddEmp'),addAttach=document.getElementById('btnAddAttach');if(addEmp)addEmp.addEventListener('click',createEmployeeRow);if(addAttach)addAttach.addEventListener('click',createAttachmentRow);const form=document.getElementById('formIncident');if(form)form.addEventListener('submit',submitIncident);createAttachmentRow();document.getElementById('in_tgl').addEventListener('change',function(){if(!this.value)return;const x=new Date(this.value),days=['Minggu','Senin','Selasa','Rabu','Kamis','Jumat','Sabtu'],months=['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];document.getElementById('in_hari').value=days[x.getDay()];document.getElementById('in_bulan').value=months[x.getMonth()]});document.getElementById('btnOpenList').addEventListener('click',function(){clearInterval(countdownTimer);window.top.location.href=listUrl()});google.script.run.withSuccessHandler(function(res){console.log('MASTER DATA RESPONSE:',res);if(res&&res.success&&res.master){masterCache=res.master;populateAll();createEmployeeRow();const status=document.getElementById('masterDataStatus');status.className='alert alert-success';status.innerHTML='<i class="bi bi-check-circle-fill"></i><span>Master Data berhasil dimuat.</span>'}else{const msg=res?.message||'Response Master Data kosong',status=document.getElementById('masterDataStatus');status.className='alert alert-danger';status.innerHTML='<i class="bi bi-exclamation-triangle-fill"></i><span>'+msg+'</span>';console.error('MASTER DATA ERROR:',msg)}}).withFailureHandler(function(err){const msg=err?.message||String(err),status=document.getElementById('masterDataStatus');status.className='alert alert-danger';status.innerHTML='<i class="bi bi-exclamation-triangle-fill"></i><span>Gagal memuat Master Data: '+msg+'</span>';console.error('MASTER DATA FAILURE:',err)}).getFormMasterData(TOKEN)})
 })();
 </script>
 </body>
