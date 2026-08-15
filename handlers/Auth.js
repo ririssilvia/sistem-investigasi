@@ -43,9 +43,7 @@ function registerSessionBridge_(token) {
   if (!normalizedToken) return;
   try {
     CacheService.getScriptCache().put(getSessionBridgeKey_(), normalizedToken, SESSION_BRIDGE_TTL_SECONDS);
-  } catch (e) {
-    // Cache is only a fallback; normal token authentication remains authoritative.
-  }
+  } catch (e) {}
 }
 
 function getBridgedSessionToken_() {
@@ -131,11 +129,6 @@ function serializeCellForClient_(value) {
   return String(value);
 }
 
-/**
- * Membuat mapping ID_Perusahaan -> nama Perusahaan dari DB_Master_System.
- * Data transaksi lama boleh berisi ID/kode, tetapi yang ditampilkan di laporan
- * harus tetap nama perusahaan seperti master.
- */
 function getCompanyMap_() {
   const map = {};
   const sheet = getMasterSS().getSheetByName(CONFIG.TAB_PERUSAHAAN);
@@ -223,8 +216,6 @@ function getFilteredIncidentRows_(token, filters) {
     return true;
   });
 
-  // Jangan mengubah struktur DB_Transaksi. Hanya nilai perusahaan pada response
-  // yang dikirim ke halaman laporan/export yang di-resolve menjadi nama master.
   const displayRows = filteredRows.map(row => {
     const copy = row.slice();
     if (companyIdx !== -1) {
@@ -247,7 +238,8 @@ function getFilteredIncidentRows_(token, filters) {
 function getFilteredIncidents(token, filters) {
   try {
     const result = getFilteredIncidentRows_(token, filters || {});
-    return {
+
+    const response = {
       success: true,
       session: {
         Username: String(result.session.Username || ''),
@@ -255,15 +247,26 @@ function getFilteredIncidents(token, filters) {
         Site: String(result.session.Site || ''),
         Nama: String(result.session.Nama || '')
       },
-      headers: result.headers,
-      rows: result.rows.map(row => row.map(serializeCellForClient_)),
-      indices: result.indices,
-      filterOptions: result.filterOptions,
-      isAdmin: result.isAdmin,
-      total: result.rows.length
+      headers: (result.headers || []).map(String),
+      rows: (result.rows || []).map(row => row.map(serializeCellForClient_)),
+      indices: result.indices || {},
+      filterOptions: {
+        sites: (result.filterOptions && result.filterOptions.sites || []).map(String),
+        statuses: (result.filterOptions && result.filterOptions.statuses || []).map(String)
+      },
+      isAdmin: !!result.isAdmin,
+      total: (result.rows || []).length
     };
+
+    return JSON.stringify(response);
   } catch (err) {
-    return { success: false, message: err && err.message ? err.message : String(err), headers: [], rows: [], total: 0 };
+    return JSON.stringify({
+      success: false,
+      message: err && err.message ? err.message : String(err),
+      headers: [],
+      rows: [],
+      total: 0
+    });
   }
 }
 
