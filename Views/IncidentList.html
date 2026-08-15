@@ -1,3 +1,293 @@
-<!doctype html><html><head><base target="_top"><meta charset="utf-8"><title>Data Laporan</title><link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css"><style>body{font-family:Segoe UI,sans-serif;background:#fff;color:#1f2937}.main{margin-left:260px;padding:30px 40px;min-height:100vh}.cardx{background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:22px;margin-bottom:20px;box-shadow:0 4px 12px #00000008}.th{background:#e31e24;color:#fff}.table td,.table th{font-size:13px;vertical-align:middle}.act{display:flex;gap:5px;flex-wrap:wrap}.modal-content{border:0;border-radius:16px}.btn-red{background:#e31e24;color:#fff;border:0;border-radius:8px;font-weight:700}.btn-red:hover{background:#b81419;color:#fff}@media(max-width:991px){.main{margin-left:0;padding:20px}}</style></head><body><?!= include('Sidebar',{scriptUrl:scriptUrl,token:token,page:'IncidentList',userName:userName,userSite:userSite,userRole:userRole}); ?><main class="main"><div class="d-flex justify-content-between align-items-center mb-4 gap-3 flex-wrap"><div><h3 class="fw-bold mb-1">Data Laporan Insiden</h3><small class="text-muted">Kelola laporan, lihat detail, tutup laporan, dan pantau history.</small></div><a class="btn btn-red px-3 py-2" href="<?= scriptUrl ?>?token=<?= token ?>&page=IncidentInput">+ Buat Laporan Baru</a></div><div class="cardx"><div class="row g-3"><div class="col-md-5"><label class="small fw-bold">Pencarian</label><input id="q" class="form-control" placeholder="No insiden, perusahaan, karyawan, kronologis..."></div><div class="col-md-2"><label class="small fw-bold">Start</label><input id="sd" type="date" class="form-control"></div><div class="col-md-2"><label class="small fw-bold">End</label><input id="ed" type="date" class="form-control"></div><div class="col-md-3"><label class="small fw-bold">Status</label><select id="st" class="form-select"><option value="">Semua Status</option></select></div><div class="col-12 text-end"><button class="btn btn-outline-secondary me-2" onclick="resetF()">Reset</button><button class="btn btn-danger" onclick="load()">Terapkan Filter</button></div></div></div><div class="cardx"><div class="d-flex justify-content-between mb-3"><b>Daftar Laporan</b><small id="info" class="text-muted">Memuat...</small></div><div class="table-responsive"><table class="table table-hover"><thead><tr><th class="th">No Insiden</th><th class="th">Tanggal</th><th class="th">Site</th><th class="th">Perusahaan</th><th class="th">Klasifikasi</th><th class="th">Karyawan</th><th class="th">Status</th><th class="th">Aksi</th></tr></thead><tbody id="tb"></tbody></table></div><div class="d-flex justify-content-between align-items-center mt-3"><select id="ps" class="form-select" style="width:100px"><option>5</option><option>10</option><option>25</option><option>50</option></select><div id="pages"></div></div></div></main>
-<div class="modal fade" id="closeModal"><div class="modal-dialog modal-dialog-centered"><div class="modal-content"><div class="modal-header"><h5 class="modal-title fw-bold">Update Laporan</h5><button class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body"><div class="alert alert-warning small"><i class="bi bi-info-circle me-1"></i>Aksi ini mengubah status seluruh transaksi dengan nomor insiden yang sama menjadi <b>Close</b>.</div><label class="form-label fw-bold">Catatan penyelesaian</label><textarea id="note" class="form-control mb-3" rows="3" placeholder="Contoh: investigasi selesai dan tindakan perbaikan sudah diverifikasi"></textarea><label class="form-label fw-bold">Lampiran penyelesaian</label><input id="file" type="file" class="form-control" accept="image/*,application/pdf"><small class="text-muted">Opsional. File akan disimpan ke folder lampiran insiden.</small></div><div class="modal-footer"><button class="btn btn-outline-secondary" data-bs-dismiss="modal">Batal</button><button class="btn btn-success" id="closeBtn" onclick="closeReport()"><i class="bi bi-check-circle me-1"></i>Tutup Laporan</button></div></div></div></div>
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script><script>const T=<?= JSON.stringify(token) ?>,U=<?= JSON.stringify(scriptUrl) ?>;let data=[],idx={},page=1,size=5,modal,closeId='';const esc=s=>String(s??'').replace(/[&<>\"]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;','\\':'&#39;'}[m]||m));function parse(x){return typeof x==='string'?JSON.parse(x):x}function load(){google.script.run.withSuccessHandler(x=>{let r=parse(x);if(!r.success)return err(r.message);idx=r.indices||{};data=r.rows||[];const sites=r.filterOptions?.sites||[],sts=r.filterOptions?.statuses||[];st.innerHTML='<option value="">Semua Status</option>'+sts.map(x=>'<option>'+esc(x)+'</option>').join('');render(data)}).withFailureHandler(x=>err(x.message||String(x))).getFilteredIncidents(T,{search:q.value,startDate:sd.value,endDate:ed.value,site:'',status:st.value})}function render(a){size=+ps.value;let total=a.length,p=Math.max(1,Math.ceil(total/size));if(page>p)page=p;let slice=a.slice((page-1)*size,page*size);tb.innerHTML=slice.length?slice.map(r=>{let id=val(r,idx.id),status=val(r,idx.status)||'Open';let badge=status.toLowerCase()==='closed'?'bg-success':status.toLowerCase().includes('progress')?'bg-warning text-dark':'bg-danger';return '<tr><td class="fw-bold text-danger">'+esc(id)+'</td><td>'+esc(val(r,idx.date))+'</td><td>'+esc(val(r,idx.site))+'</td><td>'+esc(val(r,idx.company))+'</td><td>'+esc(val(r,idx.classification))+'</td><td>'+esc(val(r,idx.employee))+'</td><td><span class="badge '+badge+'">'+esc(status)+'</span></td><td><div class="act"><a class="btn btn-sm btn-outline-primary" href="'+U+'?token='+encodeURIComponent(T)+'&page=IncidentDetail&id='+encodeURIComponent(id)+'" title="Detail"><i class="bi bi-eye"></i></a><a class="btn btn-sm btn-outline-warning" href="'+U+'?token='+encodeURIComponent(T)+'&page=IncidentEdit&id='+encodeURIComponent(id)+'" title="Edit"><i class="bi bi-pencil"></i></a><button class="btn btn-sm btn-outline-success" onclick="openClose(\''+String(id).replace(/'/g,"\\'")+'\')" title="Update laporan"><i class="bi bi-check2-square"></i></button><button class="btn btn-sm btn-outline-danger" onclick="del(\''+String(id).replace(/'/g,"\\'")+'\')" title="Delete"><i class="bi bi-trash"></i></button></div></td></tr>'}).join(''):'<tr><td colspan="8" class="text-center text-muted py-4">Tidak ada laporan.</td></tr>';info.textContent=total+' laporan';pages.innerHTML=Array.from({length:p},(_,i)=>'<button class="btn btn-sm '+(i+1===page?'btn-danger':'btn-outline-secondary')+' me-1" onclick="page='+(i+1)+';render(data)">'+(i+1)+'</button>').join('')}function val(r,i){return i>=0&&r[i]!=null&&String(r[i]).trim()?String(r[i]).trim():'-'}function err(m){tb.innerHTML='<tr><td colspan="8" class="text-danger text-center py-4">'+esc(m)+'</td></tr>'}function resetF(){q.value='';sd.value='';ed.value='';st.value='';page=1;load()}ps.onchange=()=>{page=1;render(data)};q.onkeydown=e=>{if(e.key==='Enter')load()};function openClose(id){closeId=id;note.value='';file.value='';modal=new bootstrap.Modal(document.getElementById('closeModal'));modal.show()}function b64(f){return new Promise((ok,no)=>{let r=new FileReader();r.onload=()=>ok(String(r.result).split(',')[1]);r.onerror=no;r.readAsDataURL(f)})}async function closeReport(){let b=closeBtn;b.disabled=true;b.innerHTML='Memproses...';google.script.run.withSuccessHandler(async x=>{if(!x.success){b.disabled=false;return alert(x.message)}let f=file.files[0];if(f){try{let bytes=await b64(f);let up=await new Promise((ok,no)=>google.script.run.withSuccessHandler(ok).withFailureHandler(no).uploadAttachment(T,closeId,{fileName:f.name,mimeType:f.type,bytes:bytes},'Lampiran Penyelesaian'));if(!up.success)alert(up.message)}catch(e){alert('Upload lampiran gagal: '+e.message)}}modal.hide();b.disabled=false;b.innerHTML='<i class="bi bi-check-circle me-1"></i>Tutup Laporan';load()}).withFailureHandler(e=>{b.disabled=false;alert(e.message||String(e))}).updateIncidentStatus(T,closeId,'Close',note.value||'Laporan ditutup')}function del(id){if(!confirm('Hapus laporan '+id+' beserta seluruh baris transaksinya? Tindakan ini tidak dapat dibatalkan.'))return;google.script.run.withSuccessHandler(x=>{let r=parse(x);alert(r.message||'Selesai');if(r.success)load()}).withFailureHandler(e=>alert(e.message||String(e))).deleteIncident(T,id)}load();</script></body></html>
+<!DOCTYPE html>
+<html>
+<head>
+  <base target="_top">
+  <meta charset="utf-8">
+  <title>Data Laporan - HSE Portal Sinarmas</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+  <style>
+    body{background:#fff!important;color:#1a1a1a;font-family:'Segoe UI',sans-serif;overflow-x:hidden;margin:0;padding:0}
+    .main-content{margin-left:260px!important;padding:30px 40px;transition:margin-left .3s ease!important;background:#fff!important;min-height:100vh}
+    .main-content.mini-content{margin-left:70px!important}
+    .glass-card{background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:24px;box-shadow:0 4px 12px rgba(0,0,0,.03);margin-bottom:24px}
+    .table-sinarmas{width:100%;border-collapse:separate;border-spacing:0}
+    .table-sinarmas th{background:#e31e24;color:#fff;padding:12px 16px;font-size:13px;font-weight:700;border:none;white-space:nowrap}
+    .table-sinarmas td{padding:12px 16px;border-bottom:1px solid #e2e8f0;font-size:13px;vertical-align:middle;background:#fff}
+    .table-sinarmas tbody tr:hover td{background:#fff0f1}
+    .btn-sinarmas{background:#e31e24;color:#fff;font-weight:600;border:none;padding:10px 20px;border-radius:8px;text-decoration:none}
+    .btn-sinarmas:hover{background:#b81419;color:#fff}
+    .btn-export{background:#198754;color:#fff;font-weight:600;border:none;padding:10px 18px;border-radius:8px}
+    .btn-export:hover{background:#157347;color:#fff}
+    .form-control-search,.form-select-filter,.form-control-date{border:1px solid #cbd5e1;border-radius:8px;padding:8px 14px;font-size:13.5px}
+    .filter-label{font-size:12px;font-weight:700;color:#64748b;text-transform:uppercase}
+    .loading-row{padding:28px!important}
+    .pagination-wrap{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-top:18px;padding-top:14px;border-top:1px solid #e2e8f0}
+    .page-size-wrap{display:flex;align-items:center;gap:8px;font-size:13px;color:#64748b}
+    .page-size-wrap select{width:82px}
+    .pagination .page-link{color:#e31e24;border-color:#e2e8f0}
+    .pagination .page-item.active .page-link{background:#e31e24;border-color:#e31e24;color:#fff}
+    .pagination .page-item.disabled .page-link{color:#94a3b8;background:#f8fafc}
+    @media(max-width:991px){.main-content{margin-left:0!important;padding:20px}.main-content.mini-content{margin-left:0!important}}
+  </style>
+</head>
+<body>
+  <?!= include('Sidebar', {scriptUrl:scriptUrl, token:token, page:'IncidentList', userName:userName, userSite:userSite, userRole:userRole}); ?>
+  <div class="main-content" id="mainContent">
+    <div class="d-flex justify-content-between align-items-center mb-4 pb-3 border-bottom gap-3 flex-wrap">
+      <div class="d-flex align-items-center gap-3">
+        <button type="button" class="btn btn-outline-danger border-0 p-2 fs-4" onclick="toggleSidebar()" title="Perkecil/Perbesar Sidebar"><i class="bi bi-list"></i></button>
+        <div><h3 class="fw-bold mb-0 text-dark">Data Laporan Insiden</h3><small class="text-muted">Menampilkan daftar laporan untuk Site: <strong><?= userSite ?></strong></small></div>
+      </div>
+      <div class="d-flex gap-2">
+        <button type="button" class="btn-export" id="btnExport" onclick="exportExcel()"><i class="bi bi-file-earmark-excel me-1"></i> Export Excel</button>
+        <a href="<?= scriptUrl ?>?token=<?= token ?>&page=IncidentInput" class="btn btn-sinarmas">+ Buat Laporan Baru</a>
+      </div>
+    </div>
+    <div class="glass-card mb-4">
+      <div class="row g-3">
+        <div class="col-12"><label class="filter-label mb-1">Pencarian Cepat</label><div class="input-group"><span class="input-group-text bg-white"><i class="bi bi-search text-muted"></i></span><input type="text" id="searchInput" class="form-control form-control-search" placeholder="Cari No Insiden, Perusahaan, Karyawan, atau Kronologis..."></div></div>
+        <div class="col-md-3"><label class="filter-label mb-1">Start Date</label><input type="date" id="startDate" class="form-control form-control-date"></div>
+        <div class="col-md-3"><label class="filter-label mb-1">End Date</label><input type="date" id="endDate" class="form-control form-control-date"></div>
+        <div class="col-md-3"><label class="filter-label mb-1">Site</label><select id="filterSite" class="form-select form-select-filter"><option value="">-- Semua Site --</option></select></div>
+        <div class="col-md-3"><label class="filter-label mb-1">Status Laporan</label><select id="filterStatus" class="form-select form-select-filter"><option value="">-- Semua Status --</option></select></div>
+        <div class="col-12 d-flex justify-content-end gap-2"><button type="button" class="btn btn-outline-secondary" onclick="resetFilters()"><i class="bi bi-arrow-counterclockwise me-1"></i> Reset Filter</button><button type="button" class="btn btn-danger" onclick="loadData()"><i class="bi bi-funnel me-1"></i> Terapkan Filter</button></div>
+      </div>
+    </div>
+    <div class="glass-card">
+      <div class="d-flex justify-content-between align-items-center mb-3"><div class="fw-bold">Daftar Laporan</div><small class="text-muted" id="totalInfo">Memuat...</small></div>
+      <div class="table-responsive"><table class="table-sinarmas"><thead><tr><th>No Insiden</th><th>Tanggal</th><th>Site</th><th>Perusahaan</th><th>Klasifikasi</th><th>Karyawan</th><th>Status</th><th class="text-center">Aksi</th></tr></thead><tbody id="listTableBody"><tr><td colspan="8" class="text-center text-muted loading-row">Memuat data laporan insiden...</td></tr></tbody></table></div>
+      <div class="pagination-wrap" id="paginationWrap" style="display:none"><div class="page-size-wrap"><span>Tampilkan</span><select id="pageSize" class="form-select form-select-sm"><option value="5" selected>5</option><option value="10">10</option><option value="25">25</option><option value="50">50</option><option value="100">100</option></select><span>data per halaman</span></div><div class="small text-muted" id="pageInfo"></div><nav aria-label="Pagination"><ul class="pagination pagination-sm mb-0" id="pagination"></ul></nav></div>
+    </div>
+  </div>
+<script>
+const TOKEN=<?= JSON.stringify(token) ?>;
+const SCRIPT_URL=<?= JSON.stringify(scriptUrl) ?>;
+let ALL_DATA=[],HEADERS=[],IDX={id:-1,date:-1,site:-1,company:-1,status:-1,classification:-1,employee:-1,chronology:-1},IS_LOADING=false,CURRENT_PAGE=1,PAGE_SIZE=5,GROUPED_DATA=[];
+
+window.addEventListener('DOMContentLoaded',()=>{
+  document.getElementById('searchInput').addEventListener('keydown',e=>{if(e.key==='Enter')loadData()});
+  document.getElementById('pageSize').addEventListener('change',()=>{PAGE_SIZE=parseInt(document.getElementById('pageSize').value,10)||5;CURRENT_PAGE=1;renderCurrentPage()});
+  loadData();
+});
+
+function normalizeHeader(v){return String(v||'').trim().toLowerCase().replace(/[\s_\-\/]+/g,' ')}
+
+function findIdx(candidates){
+  const h=HEADERS.map(normalizeHeader),c=candidates.map(normalizeHeader);
+  for(const x of c){
+    const i=h.indexOf(x);
+    if(i!==-1)return i;
+  }
+  for(let i=0;i<h.length;i++) if(c.some(x=>x&&(h[i].includes(x)||x.includes(h[i])))) return i;
+  return -1;
+}
+
+function buildIndices(serverIndices){
+  // 1. Utamakan indeks dari server jika valid
+  if(serverIndices && serverIndices.company !== undefined && serverIndices.company >= 0){
+    IDX = serverIndices;
+    return;
+  }
+  // 2. Fallback: Cari manual berdasarkan nama header asli spreadsheet
+  IDX.id = findIdx(['No Insiden','Nomor Insiden','No. Insiden','ID Insiden']);
+  IDX.date = findIdx(['Tanggal Kejadian','Tanggal','Date of Incident']);
+  IDX.site = findIdx(['Site/Business Unit (BU)','Site','Business Unit']);
+  IDX.company = findIdx(['Perusahan', 'Perusahaan', 'Nama Perusahaan', 'Company']);
+  IDX.status = findIdx(['Status Laporan','Status']);
+  IDX.classification = findIdx(['Klasifikasi Kecelakaan','Klasifikasi Insiden','Klasifikasi']);
+  IDX.employee = findIdx(['Karyawan Terlibat / Nama', 'Karyawan Terlibat', 'Nama Karyawan', 'Karyawan']);
+  IDX.chronology = findIdx(['Kronologis','Uraian Kronologis Kejadian']);
+}
+
+function val(row, idx, def='-'){
+  if(idx === undefined || idx === null || idx < 0 || !row) return def;
+  const v = row[idx];
+  return (v === null || v === undefined || String(v).trim() === '') ? def : String(v).trim();
+}
+
+function escapeHtml(v){return String(v??'').replace(/[&<>'"]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[m]))}
+function formatDate(v){if(!v || v === '-')return '-';const d=new Date(v);return isNaN(d.getTime())?String(v):d.toLocaleDateString('id-ID')}
+function parseRpcResponse(raw){if(raw===null||raw===undefined||raw==='')return null;if(typeof raw==='object')return raw;try{return JSON.parse(String(raw))}catch(e){throw new Error('Response server bukan JSON yang valid: '+e.message)}}
+
+function loadData(){
+  if(IS_LOADING)return;
+  IS_LOADING=true;
+  setLoading(true,'Memuat data laporan insiden...');
+  const filters={
+    search:document.getElementById('searchInput').value.trim(),
+    startDate:document.getElementById('startDate').value,
+    endDate:document.getElementById('endDate').value,
+    site:document.getElementById('filterSite').value,
+    status:document.getElementById('filterStatus').value
+  };
+  google.script.run
+    .withSuccessHandler(raw=>{
+      IS_LOADING=false;
+      let res;
+      try{res=parseRpcResponse(raw)}catch(e){showError(e.message);return}
+      if(!res){showError('Server tidak mengembalikan response.');return}
+      if(res.success!==true){showError(res.message||'Gagal memuat data laporan.');return}
+      HEADERS=res.headers||[];
+      buildIndices(res.indices);
+      ALL_DATA=res.rows||[];
+      GROUPED_DATA=groupRows(ALL_DATA);
+      CURRENT_PAGE=1;
+      populateFilters(res.filterOptions||{});
+      renderCurrentPage();
+    })
+    .withFailureHandler(err=>{
+      IS_LOADING=false;
+      showError('Gagal memuat data: '+(err&&err.message?err.message:err));
+    })
+    .getFilteredIncidents(TOKEN,filters);
+}
+
+function populateFilters(options){
+  const site=document.getElementById('filterSite'),status=document.getElementById('filterStatus'),currentSite=site.value,currentStatus=status.value,sites=options.sites||[],statuses=options.statuses||[];
+  site.innerHTML='<option value="">-- Semua Site --</option>'+sites.map(v=>`<option value="${escapeHtml(v)}">${escapeHtml(v)}</option>`).join('');
+  status.innerHTML='<option value="">-- Semua Status --</option>'+statuses.map(v=>`<option value="${escapeHtml(v)}">${escapeHtml(v)}</option>`).join('');
+  if(sites.includes(currentSite))site.value=currentSite;
+  if(statuses.includes(currentStatus))status.value=currentStatus;
+}
+
+function groupRows(rows){
+  const map = new Map();
+
+  rows.forEach(row => {
+    const id = String(val(row, IDX.id, '')).trim();
+    const key = id || JSON.stringify(row);
+
+    if (!map.has(key)) {
+      // Buat entitas group baru
+      map.set(key, { 
+        baseRow: [...row], 
+        companies: new Set(), 
+        employees: new Set() 
+      });
+    }
+
+    const item = map.get(key);
+    
+    // Kumpulkan seluruh perusahaan & karyawan unik dari baris yang No Insiden-nya sama
+    const compVal = val(row, IDX.company, '');
+    const empVal = val(row, IDX.employee, '');
+
+    if (compVal && compVal !== '-') item.companies.add(compVal);
+    if (empVal && empVal !== '-') item.employees.add(empVal);
+  });
+
+  // Konversi balik ke format array baris tunggal
+  return Array.from(map.values()).map(item => {
+    const mergedRow = [...item.baseRow];
+    
+    if (IDX.company >= 0) {
+      mergedRow[IDX.company] = Array.from(item.companies).join(', ') || '-';
+    }
+    if (IDX.employee >= 0) {
+      mergedRow[IDX.employee] = Array.from(item.employees).join(', ') || '-';
+    }
+
+    return { row: mergedRow };
+  });
+}
+
+function renderCurrentPage(){
+  const totalTransactions=ALL_DATA.length,totalReports=GROUPED_DATA.length,totalPages=Math.max(1,Math.ceil(totalReports/PAGE_SIZE));
+  if(CURRENT_PAGE>totalPages)CURRENT_PAGE=totalPages;
+  const start=(CURRENT_PAGE-1)*PAGE_SIZE,end=Math.min(start+PAGE_SIZE,totalReports);
+  displayRows(GROUPED_DATA.slice(start,end));
+  document.getElementById('totalInfo').textContent=totalTransactions+' baris transaksi / '+totalReports+' laporan';
+  renderPagination(totalReports,totalPages,start,end);
+}
+
+function renderPagination(total,totalPages,start,end){
+  const wrap=document.getElementById('paginationWrap'),ul=document.getElementById('pagination'),info=document.getElementById('pageInfo');
+  if(total<=PAGE_SIZE){
+    wrap.style.display=total?'flex':'none';
+    ul.innerHTML='';
+    info.textContent=total?'Menampilkan '+(start+1)+'–'+end+' dari '+total+' laporan':'';
+    return;
+  }
+  wrap.style.display='flex';
+  info.textContent='Menampilkan '+(start+1)+'–'+end+' dari '+total+' laporan';
+  let html=`<li class="page-item ${CURRENT_PAGE===1?'disabled':''}"><button class="page-link" type="button" onclick="goPage(${CURRENT_PAGE-1})">‹</button></li>`;
+  const pages=[];
+  for(let p=1;p<=totalPages;p++){
+    if(p===1||p===totalPages||Math.abs(p-CURRENT_PAGE)<=1)pages.push(p);
+    else if(p===CURRENT_PAGE-2||p===CURRENT_PAGE+2)pages.push('...');
+  }
+  let last='';
+  pages.forEach(p=>{
+    if(p==='...'&&last==='...')return;
+    if(p==='...')html+='<li class="page-item disabled"><span class="page-link">…</span></li>';
+    else html+=`<li class="page-item ${p===CURRENT_PAGE?'active':''}"><button class="page-link" type="button" onclick="goPage(${p})">${p}</button></li>`;
+    last=p;
+  });
+  html+=`<li class="page-item ${CURRENT_PAGE===totalPages?'disabled':''}"><button class="page-link" type="button" onclick="goPage(${CURRENT_PAGE+1})">›</button></li>`;
+  ul.innerHTML=html;
+}
+
+function goPage(page){
+  const totalPages=Math.max(1,Math.ceil(GROUPED_DATA.length/PAGE_SIZE));
+  if(page<1||page>totalPages)return;
+  CURRENT_PAGE=page;
+  renderCurrentPage();
+}
+
+function displayRows(groups){
+  const tbody=document.getElementById('listTableBody');
+  tbody.innerHTML='';
+  if(!groups.length){
+    tbody.innerHTML='<tr><td colspan="8" class="text-center py-4 text-muted">Data laporan tidak ditemukan.</td></tr>';
+    return;
+  }
+  groups.forEach(g=>{
+    const r = g.row;
+    const id = val(r, IDX.id);
+    const dateVal = val(r, IDX.date);
+    const siteVal = val(r, IDX.site);
+    const companyText = val(r, IDX.company);
+    const classText = val(r, IDX.classification);
+    const employeeText = val(r, IDX.employee);
+    const st = String(val(r, IDX.status, 'Open'));
+
+    let badge='bg-danger';
+    if(st.toLowerCase()==='closed')badge='bg-success';
+    else if(st.toLowerCase().includes('progress'))badge='bg-warning text-dark';
+
+    tbody.insertAdjacentHTML('beforeend',`<tr>
+      <td class="fw-bold text-danger">${escapeHtml(id)}</td>
+      <td>${escapeHtml(formatDate(dateVal))}</td>
+      <td>${escapeHtml(siteVal)}</td>
+      <td>${escapeHtml(companyText)}</td>
+      <td>${escapeHtml(classText)}</td>
+      <td>${escapeHtml(employeeText)}</td>
+      <td><span class="badge ${badge}">${escapeHtml(st)}</span></td>
+      <td class="text-center"><a href="${SCRIPT_URL}?token=${encodeURIComponent(TOKEN)}&page=IncidentEdit&id=${encodeURIComponent(id)}" class="btn btn-outline-warning btn-sm"><i class="bi bi-pencil"></i> Edit</a></td>
+    </tr>`);
+  });
+}
+
+function setLoading(on,text){if(on){document.getElementById('listTableBody').innerHTML=`<tr><td colspan="8" class="text-center text-muted loading-row"><span class="spinner-border spinner-border-sm me-2"></span>${escapeHtml(text)}</td></tr>`}}
+function showError(message){document.getElementById('totalInfo').textContent='Gagal memuat';document.getElementById('listTableBody').innerHTML=`<tr><td colspan="8" class="text-center text-danger py-4"><i class="bi bi-exclamation-triangle me-1"></i>${escapeHtml(message)}</td></tr>`}
+function resetFilters(){document.getElementById('searchInput').value='';document.getElementById('startDate').value='';document.getElementById('endDate').value='';document.getElementById('filterSite').value='';document.getElementById('filterStatus').value='';CURRENT_PAGE=1;loadData()}
+function exportExcel(){
+  const btn=document.getElementById('btnExport'),filters={search:document.getElementById('searchInput').value.trim(),startDate:document.getElementById('startDate').value,endDate:document.getElementById('endDate').value,site:document.getElementById('filterSite').value,status:document.getElementById('filterStatus').value};
+  btn.disabled=true;
+  btn.innerHTML='<span class="spinner-border spinner-border-sm me-1"></span> Membuat Excel...';
+  google.script.run.withSuccessHandler(res=>{
+    btn.disabled=false;
+    btn.innerHTML='<i class="bi bi-file-earmark-excel me-1"></i> Export Excel';
+    if(!res||res.success!==true){alert((res&&res.message)||'Gagal membuat file Excel.');return}
+    const a=document.createElement('a');a.href=res.downloadUrl;a.target='_blank';a.rel='noopener';a.click();
+    alert('Export berhasil: '+res.fileName+' ('+res.total+' baris transaksi).');
+  }).withFailureHandler(err=>{
+    btn.disabled=false;
+    btn.innerHTML='<i class="bi bi-file-earmark-excel me-1"></i> Export Excel';
+    alert('Gagal export Excel: '+(err&&err.message?err.message:err));
+  }).exportIncidentExcel(TOKEN,filters);
+}
+</script>
+</body>
+</html>
